@@ -13,3 +13,6 @@
 | Images in body	| Yes				| No			| ?			| Yes						| ?										| ?									| ?				| ?												|
 | Attachments			| Yes				| No			| ?			| Yes						| Yes									| Yes								| Yes			| ?												|
 | Open as draft		| ?					| Yes			| ?			| Yes						| Yes									| Yes								| Yes			| ?												|
+| Windows					| Yes				| Yes			| Yes		| Yes						| Yes									| Yes								| No			| Yes?										|
+| MacOS						| Yes				| Yes			| No		| No						| No?									| No								| Yes			| Yes?										|
+| Linux						| Yes				| Yes			| No		| No						| No									| No								| No			| Yes?										|
