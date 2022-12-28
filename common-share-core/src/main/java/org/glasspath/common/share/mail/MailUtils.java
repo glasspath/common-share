@@ -110,8 +110,17 @@ public class MailUtils {
 		try {
 
 			String mailto = "mailto:" + createRecipientsString(mailable.getTo(), ",");
+
 			mailto += "?subject=" + mailable.getSubject();
-			// TODO: CC & BCC
+
+			if (mailable.getCc().size() > 0) {
+				mailto += "&cc=" + createRecipientsString(mailable.getCc(), ",");
+			}
+
+			if (mailable.getBcc().size() > 0) {
+				mailto += "&bcc=" + createRecipientsString(mailable.getBcc(), ",");
+			}
+
 			mailto += "&body=" + mailable.getText();
 
 			// TODO?
