@@ -42,6 +42,7 @@ public class AppKitShareUtils {
 
 		// TODO: Remove
 		mailable.getAttachments().add(TEST_ATTACHEMENT);
+		mailable.getAttachments().add("/Users/remcopoelstra/Documents/temp/22008.pdf");
 
 		List<NSObject> objects = new ArrayList<>();
 
@@ -64,35 +65,55 @@ public class AppKitShareUtils {
 				throw new ShareException("Could not create NSSharingService");
 			}
 
-			String to = "";
-			if (mailable.getTo().size() > 0) {
-				// TODO: Add all 'to' recipients
-				to = mailable.getTo().get(0);
+			if (mailable.getTo() != null && mailable.getTo().size() > 0) {
+
+				String to = mailable.getTo().get(0);
+
+				NSString toString = new NSString(to);
+				if (!Foundation.addObject(toString, objects)) {
+					throw new ShareException("Could not create NSString(to)");
+				}
+
+				NSArray recipientsArrays = new NSArray(toString);
+				if (!Foundation.addObject(recipientsArrays, objects)) {
+					throw new ShareException("Could not create NSArray(toString)");
+				}
+
+				for (int i = 1; i < mailable.getTo().size(); i++) {
+
+					to = mailable.getTo().get(i);
+
+					toString = new NSString(to);
+					if (!Foundation.addObject(toString, objects)) {
+						throw new ShareException("Could not create NSString(to)");
+					}
+
+					recipientsArrays = recipientsArrays.arrayByAddingObject(toString);
+					if (!Foundation.addObject(recipientsArrays, objects)) {
+						throw new ShareException("Could not create NSArray from recipientsArrays.arrayByAddingObject(toString)");
+					}
+
+				}
+
+				sharingService.setRecipients(recipientsArrays);
+
 			}
 
-			NSString toString = new NSString(to);
-			if (!Foundation.addObject(toString, objects)) {
-				throw new ShareException("Could not create NSString(to)");
+			if (mailable.getSubject() != null && mailable.getSubject().length() > 0) {
+
+				NSString subjectString = new NSString(mailable.getSubject());
+				if (!Foundation.addObject(subjectString, objects)) {
+					throw new ShareException("Could not create NSString(mailable.getSubject())");
+				}
+
+				sharingService.setSubject(subjectString);
+
 			}
-
-			NSArray recipientsArrays = new NSArray(toString);
-			if (!Foundation.addObject(recipientsArrays, objects)) {
-				throw new ShareException("Could not create NSArray(toString)");
-			}
-
-			sharingService.setRecipients(recipientsArrays);
-
-			NSString subjectString = new NSString(mailable.getSubject());
-			if (!Foundation.addObject(subjectString, objects)) {
-				throw new ShareException("Could not create NSString(mailable.getSubject())");
-			}
-
-			sharingService.setSubject(subjectString);
 
 			String body = "";
 			if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
 				body = mailable.getHtml();
-			} else {
+			} else if (mailable.getText() != null && mailable.getText().length() > 0) {
 				body = mailable.getText();
 			}
 
@@ -106,27 +127,30 @@ public class AppKitShareUtils {
 				throw new ShareException("Could not create NSArray(bodyString)");
 			}
 
-			// TODO: Add all attachments
-			String attachmentPath = null;
-			if (mailable.getAttachments().size() > 0) {
+			// Let's make sure the attachments are valid (NSException will crash our application)
+			List<String> attachments = new ArrayList<>();
+			if (mailable.getAttachments() != null && mailable.getAttachments().size() > 0) {
 
-				String attachment = mailable.getAttachments().get(0);
-				if (attachment.length() > 0) {
+				for (String attachment : mailable.getAttachments()) {
 
-					File attachmentFile = new File(attachment);
-					if (attachmentFile.exists() && !attachmentFile.isDirectory()) {
-						attachmentPath = attachment;
+					if (attachment.length() > 0) {
+
+						File attachmentFile = new File(attachment);
+						if (attachmentFile.exists() && !attachmentFile.isDirectory()) {
+							attachments.add(attachment);
+						}
+
 					}
 
 				}
 
 			}
 
-			if (attachmentPath != null) {
+			if (attachments.size() > 0) {
 
-				NSString attachmentString = new NSString(attachmentPath);
+				NSString attachmentString = new NSString(attachments.get(0));
 				if (!Foundation.addObject(attachmentString, objects)) {
-					throw new ShareException("Could not create NSString(attachmentPath)");
+					throw new ShareException("Could not create NSString(attachments.get(0))");
 				}
 
 				NSURL attachmentURL = new NSURL(attachmentString.getId());
@@ -137,6 +161,25 @@ public class AppKitShareUtils {
 				NSArray itemsArrayBodyAndAttachment = itemsArrayBody.arrayByAddingObject(attachmentURL);
 				if (!Foundation.addObject(itemsArrayBodyAndAttachment, objects)) {
 					throw new ShareException("Could not create NSArray from itemsArrayBody.arrayByAddingObject(attachmentURL)");
+				}
+
+				for (int i = 1; i < attachments.size(); i++) {
+
+					attachmentString = new NSString(attachments.get(1));
+					if (!Foundation.addObject(attachmentString, objects)) {
+						throw new ShareException("Could not create NSString(attachments.get(1))");
+					}
+
+					attachmentURL = new NSURL(attachmentString.getId());
+					if (!Foundation.addObject(attachmentURL, objects)) {
+						throw new ShareException("Could not create NSURL(attachmentString.getId())");
+					}
+
+					itemsArrayBodyAndAttachment = itemsArrayBodyAndAttachment.arrayByAddingObject(attachmentURL);
+					if (!Foundation.addObject(itemsArrayBodyAndAttachment, objects)) {
+						throw new ShareException("Could not create NSArray from itemsArrayBodyAndAttachment.arrayByAddingObject(attachmentURL)");
+					}
+
 				}
 
 				// TODO: Implement canPerformWithItems?
