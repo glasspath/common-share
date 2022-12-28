@@ -24,6 +24,7 @@ package org.glasspath.common.share.mail;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("nls")
 public class Mailable {
@@ -35,6 +36,7 @@ public class Mailable {
 	private String subject = "";
 	private String text = null;
 	private String html = null;
+	private Map<String, String> images = null;
 	private List<String> attachments = new ArrayList<>();
 
 	public Mailable() {
@@ -107,6 +109,14 @@ public class Mailable {
 
 	public void setHtml(String html) {
 		this.html = html;
+	}
+
+	public Map<String, String> getImages() {
+		return images;
+	}
+
+	public void setImages(Map<String, String> images) {
+		this.images = images;
 	}
 
 	public List<String> getAttachments() {

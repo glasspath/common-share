@@ -24,16 +24,22 @@ package org.glasspath.common.share.mail;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 
 import org.glasspath.common.Common;
 import org.glasspath.common.share.ShareException;
+import org.glasspath.common.share.mail.account.Account;
 import org.glasspath.common.share.mail.account.SmtpAccount;
 import org.simplejavamail.api.email.Email;
+import org.simplejavamail.api.email.EmailPopulatingBuilder;
 import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.api.mailer.config.TransportStrategy;
 import org.simplejavamail.converter.EmailConverter;
+import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.MailerBuilder;
+
+import jakarta.activation.FileDataSource;
 
 public class MailShareUtils {
 
@@ -63,6 +69,68 @@ public class MailShareUtils {
 
 		} else {
 			throw new ShareException("Illegal argument passed for testing account");
+		}
+
+	}
+
+	public static org.simplejavamail.api.email.Email createSimpleEmail(Mailable mailable, Account account) throws ShareException {
+
+		try {
+
+			EmailPopulatingBuilder builder = EmailBuilder.startingBlank()
+					.withHeader("X-Unsent", "1") // Seems to work with outlook, but not with windows mail App..
+					.withHeader("X-Uniform-Type-Identifier", "com.apple.mail-draft") // For apple?
+					.withHeader("X-Mozilla-Draft-Info", "internal/draft; vcard=0; receipt=0; DSN=0; uuencode=0"); // Thunderbird?
+
+			if (account != null && account.isValid()) {
+				builder.from(account.getName() != null ? account.getName() : account.getEmail(), account.getEmail());
+			}
+
+			for (String to : mailable.getTo()) {
+				builder.to(to);
+			}
+
+			for (String cc : mailable.getCc()) {
+				builder.cc(cc);
+			}
+
+			for (String bcc : mailable.getBcc()) {
+				builder.bcc(bcc);
+			}
+
+			if (mailable.getSubject() != null && mailable.getSubject().length() > 0) {
+				builder.withSubject(mailable.getSubject());
+			}
+
+			if (mailable.getText() != null && mailable.getText().length() > 0) {
+				builder.withPlainText(mailable.getText());
+			}
+
+			if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
+				builder.withHTMLText(mailable.getHtml());
+			}
+
+			if (mailable.getImages() != null) {
+
+				for (Entry<String, String> entry : mailable.getImages().entrySet()) {
+
+					if (entry.getValue() != null) {
+
+						File imageFile = new File(entry.getValue());
+						if (imageFile.exists() && !imageFile.isDirectory()) {
+							builder.withEmbeddedImage(entry.getKey(), new FileDataSource(imageFile));
+						}
+
+					}
+
+				}
+
+			}
+
+			return builder.buildEmail();
+
+		} catch (Exception e) {
+			throw new ShareException("Could not create simple email", e); //$NON-NLS-1$
 		}
 
 	}
