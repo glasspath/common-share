@@ -22,10 +22,13 @@
  */
 package org.glasspath.common.share.mail;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.glasspath.common.share.ShareException;
 
 public class MailUtils {
 
@@ -99,6 +102,27 @@ public class MailUtils {
 		}
 
 		return s;
+
+	}
+
+	public static URI createMailtoUri(Mailable mailable) throws ShareException {
+
+		try {
+
+			String mailto = "mailto:" + createRecipientsString(mailable.getTo(), ",");
+			mailto += "?subject=" + mailable.getSubject();
+			// TODO: CC & BCC
+			mailto += "&body=" + mailable.getText();
+
+			// TODO?
+			mailto = mailto.replace(" ", "%20");
+			mailto = mailto.replace("\n", "%0D%0A");
+
+			return URI.create(mailto);
+
+		} catch (Exception e) {
+			throw new ShareException("Could not create mailto URI", e);
+		}
 
 	}
 
