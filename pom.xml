@@ -28,6 +28,7 @@
 
 	<modules>
 		<module>common-share-core</module>
+		<module>common-share-mail</module>
 		<module>common-share-appkit</module>
 		<module>common-share-mapi</module>
 		<module>common-share-outlook</module>
