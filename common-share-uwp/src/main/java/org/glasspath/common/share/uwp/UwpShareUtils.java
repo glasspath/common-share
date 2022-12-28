@@ -25,6 +25,7 @@ package org.glasspath.common.share.uwp;
 import javax.swing.JFrame;
 
 import org.glasspath.common.Common;
+import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.mail.Mailable;
 
 import com.sun.jna.Native;
@@ -36,7 +37,7 @@ public class UwpShareUtils {
 
 	}
 
-	public static void showShareMenu(JFrame frame, Mailable mailable, String assemblyResolvePath) {
+	public static void showShareMenu(JFrame frame, Mailable mailable, String assemblyResolvePath) throws ShareException {
 
 		try {
 
@@ -64,8 +65,10 @@ public class UwpShareUtils {
 			Common.LOGGER.info("Showing UWP share menu");
 			System.out.println(shareUtilsInterop.ShowEmailShareMenu(Pointer.nativeValue(componentPointer), mailable.getSubject(), "TestDescription", mailable.getText(), mailable.getHtml(), "C:\\temp\\test.txt"));
 
+		} catch (UnsatisfiedLinkError e) {
+			throw new ShareException("Could not show share menu", e);
 		} catch (Exception e) {
-			Common.LOGGER.error("Exception while showing UWP share menu: " + e);
+			throw new ShareException("Could not show share menu", e);
 		}
 
 	}

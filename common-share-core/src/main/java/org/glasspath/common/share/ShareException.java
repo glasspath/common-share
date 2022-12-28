@@ -20,38 +20,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package org.glasspath.common.share.thunderbird;
+package org.glasspath.common.share;
 
-import java.util.ArrayList;
-import java.util.List;
+public class ShareException extends RuntimeException {
 
-import org.glasspath.common.share.ShareException;
-import org.glasspath.common.share.mail.Mailable;
-
-public class ThunderbirdShareUtils {
-
-	private ThunderbirdShareUtils() {
-
+	public ShareException(String message) {
+		super(message);
 	}
 
-	public static void createCommandLineEmail(Mailable mailable) throws ShareException {
-
-		// TODO
-		
-		List<String> command = new ArrayList<>();
-		command.add("thunderbird");
-
-		try {
-
-			new ProcessBuilder(command).inheritIO().start();
-
-			// Process process = new ProcessBuilder(command).inheritIO().start();
-			// process.waitFor();
-
-		} catch (Exception e) {
-			throw new ShareException("Could not create Thunderbird (command line) email", e);
-		}
-
+	public ShareException(String message, Throwable cause) {
+		super(message, cause);
 	}
 
 }

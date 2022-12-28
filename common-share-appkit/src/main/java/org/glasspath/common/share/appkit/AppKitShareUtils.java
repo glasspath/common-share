@@ -26,6 +26,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.appkit.NSSharingService.NSSharingServiceName;
 import org.glasspath.common.share.mail.Mailable;
 
@@ -37,120 +38,126 @@ public class AppKitShareUtils {
 
 	}
 
-	public static int createEmail(Mailable mailable) {
+	public static void createEmail(Mailable mailable) throws ShareException {
 
 		// TODO: Remove
 		mailable.getAttachments().add(TEST_ATTACHEMENT);
 
 		List<NSObject> objects = new ArrayList<>();
 
-		// Don't add the exceptionHandler to the objects that will be released, it's a static instance
-		NSExceptionHandler exceptionHandler = new NSExceptionHandler();
-		if (Foundation.isNull(exceptionHandler)) {
-			return -1;
-		}
+		try {
 
-		// https://stackoverflow.com/questions/9797922/uncaught-exception-handler-not-called
-		// https://lists.gnu.org/archive/html/gnustep-dev/2009-02/msg00028.html
+			// Don't add the exceptionHandler to the objects that will be released, it's a static instance
+			NSExceptionHandler exceptionHandler = new NSExceptionHandler();
+			if (Foundation.isNull(exceptionHandler)) {
+				throw new ShareException("Could not create NSExceptionHandler");
+			}
 
-		// TODO: Try to implement a exception handler which prevents application-crashes
-		// exceptionHandler.setExceptionHangingMask(0);
+			// https://stackoverflow.com/questions/9797922/uncaught-exception-handler-not-called
+			// https://lists.gnu.org/archive/html/gnustep-dev/2009-02/msg00028.html
 
-		NSSharingService sharingService = new NSSharingService(NSSharingServiceName.COMPOSE_EMAIL);
-		if (!Foundation.addObject(sharingService, objects)) {
-			return -2;
-		}
+			// TODO: Try to implement a exception handler which prevents application-crashes
+			// exceptionHandler.setExceptionHangingMask(0);
 
-		String to = "";
-		if (mailable.getTo().size() > 0) {
-			// TODO: Add all 'to' recipients
-			to = mailable.getTo().get(0);
-		}
+			NSSharingService sharingService = new NSSharingService(NSSharingServiceName.COMPOSE_EMAIL);
+			if (!Foundation.addObject(sharingService, objects)) {
+				throw new ShareException("Could not create NSSharingService");
+			}
 
-		NSString toString = new NSString(to);
-		if (!Foundation.addObject(toString, objects)) {
-			return -3;
-		}
+			String to = "";
+			if (mailable.getTo().size() > 0) {
+				// TODO: Add all 'to' recipients
+				to = mailable.getTo().get(0);
+			}
 
-		NSArray recipientsArrays = new NSArray(toString);
-		if (!Foundation.addObject(recipientsArrays, objects)) {
-			return -4;
-		}
+			NSString toString = new NSString(to);
+			if (!Foundation.addObject(toString, objects)) {
+				throw new ShareException("Could not create NSString(to)");
+			}
 
-		sharingService.setRecipients(recipientsArrays);
+			NSArray recipientsArrays = new NSArray(toString);
+			if (!Foundation.addObject(recipientsArrays, objects)) {
+				throw new ShareException("Could not create NSArray(toString)");
+			}
 
-		NSString subjectString = new NSString(mailable.getSubject());
-		if (!Foundation.addObject(subjectString, objects)) {
-			return -5;
-		}
+			sharingService.setRecipients(recipientsArrays);
 
-		sharingService.setSubject(subjectString);
+			NSString subjectString = new NSString(mailable.getSubject());
+			if (!Foundation.addObject(subjectString, objects)) {
+				throw new ShareException("Could not create NSString(mailable.getSubject())");
+			}
 
-		String body = "";
-		if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
-			body = mailable.getHtml();
-		} else {
-			body = mailable.getText();
-		}
+			sharingService.setSubject(subjectString);
 
-		NSString bodyString = new NSString(body);
-		if (!Foundation.addObject(bodyString, objects)) {
-			return -6;
-		}
+			String body = "";
+			if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
+				body = mailable.getHtml();
+			} else {
+				body = mailable.getText();
+			}
 
-		NSArray itemsArrayBody = new NSArray(bodyString);
-		if (!Foundation.addObject(itemsArrayBody, objects)) {
-			return -7;
-		}
+			NSString bodyString = new NSString(body);
+			if (!Foundation.addObject(bodyString, objects)) {
+				throw new ShareException("Could not create NSString(body)");
+			}
 
-		// TODO: Add all attachments
-		String attachmentPath = null;
-		if (mailable.getAttachments().size() > 0) {
+			NSArray itemsArrayBody = new NSArray(bodyString);
+			if (!Foundation.addObject(itemsArrayBody, objects)) {
+				throw new ShareException("Could not create NSArray(bodyString)");
+			}
 
-			String attachment = mailable.getAttachments().get(0);
-			if (attachment.length() > 0) {
+			// TODO: Add all attachments
+			String attachmentPath = null;
+			if (mailable.getAttachments().size() > 0) {
 
-				File attachmentFile = new File(attachment);
-				if (attachmentFile.exists() && !attachmentFile.isDirectory()) {
-					attachmentPath = attachment;
+				String attachment = mailable.getAttachments().get(0);
+				if (attachment.length() > 0) {
+
+					File attachmentFile = new File(attachment);
+					if (attachmentFile.exists() && !attachmentFile.isDirectory()) {
+						attachmentPath = attachment;
+					}
+
 				}
 
 			}
 
+			if (attachmentPath != null) {
+
+				NSString attachmentString = new NSString(attachmentPath);
+				if (!Foundation.addObject(attachmentString, objects)) {
+					throw new ShareException("Could not create NSString(attachmentPath)");
+				}
+
+				NSURL attachmentURL = new NSURL(attachmentString.getId());
+				if (!Foundation.addObject(attachmentURL, objects)) {
+					throw new ShareException("Could not create NSURL(attachmentString.getId())");
+				}
+
+				NSArray itemsArrayBodyAndAttachment = itemsArrayBody.arrayByAddingObject(attachmentURL);
+				if (!Foundation.addObject(itemsArrayBodyAndAttachment, objects)) {
+					throw new ShareException("Could not create NSArray from itemsArrayBody.arrayByAddingObject(attachmentURL)");
+				}
+
+				// TODO: Implement canPerformWithItems?
+				sharingService.performWithItems(itemsArrayBodyAndAttachment);
+
+				Foundation.releaseObjects(objects);
+
+			} else {
+
+				// TODO: Implement canPerformWithItems?
+				sharingService.performWithItems(itemsArrayBody);
+
+				Foundation.releaseObjects(objects);
+
+			}
+
+		} catch (UnsatisfiedLinkError e) {
+			throw new ShareException("Could not create email through AppKit sharing service", e);
+		} catch (Exception e) {
+			throw new ShareException("Could not create email through AppKit sharing service", e);
 		}
-
-		if (attachmentPath != null) {
-
-			NSString attachmentString = new NSString(attachmentPath);
-			if (!Foundation.addObject(attachmentString, objects)) {
-				return -8;
-			}
-
-			NSURL attachmentURL = new NSURL(attachmentString.getId());
-			if (!Foundation.addObject(attachmentURL, objects)) {
-				return -9;
-			}
-
-			NSArray itemsArrayBodyAndAttachment = itemsArrayBody.arrayByAddingObject(attachmentURL);
-			if (!Foundation.addObject(itemsArrayBodyAndAttachment, objects)) {
-				return -10;
-			}
-
-			// TODO: Implement canPerformWithItems?
-			sharingService.performWithItems(itemsArrayBodyAndAttachment);
-
-			Foundation.releaseObjects(objects);
-
-		} else {
-
-			// TODO: Implement canPerformWithItems?
-			sharingService.performWithItems(itemsArrayBody);
-
-			Foundation.releaseObjects(objects);
-
-		}
-
-		return 0;
 
 	}
 

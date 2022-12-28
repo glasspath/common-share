@@ -22,8 +22,10 @@
  */
 package org.glasspath.common.share.mapi;
 
+import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.mail.Mailable;
 
+import com.sun.jna.Native;
 import com.sun.jna.Platform;
 import com.sun.jna.WString;
 
@@ -33,48 +35,62 @@ public class MapiShareUtils {
 
 	}
 
-	public static void createEmail(Mailable mailable) {
+	public static void createEmail(Mailable mailable) throws ShareException {
 
-		if (Platform.isWindows() && MapiLibrary.INSTANCE != null) {
+		if (Platform.isWindows()) {
 
-			// TODO
+			try {
 
-			MapiMessageW message = new MapiMessageW();
-			message.subject = new WString("Test subject");
-			message.noteText = new WString("Dit is een test tekst");
+				MapiLibrary mapi = Platform.isWindows() ? (MapiLibrary) Native.load("mapi32", MapiLibrary.class) : null;
 
-			MapiRecipDescW[] receips = (MapiRecipDescW[]) new MapiRecipDescW().toArray(3);
+				// TODO
 
-			receips[0].ulRecipClass = 1;
-			receips[0].lpszName = new WString("TODO-TO");
-			receips[0].lpszAddress = new WString("SMTP:to@to.to");
-			receips[0].write();
+				MapiMessageW message = new MapiMessageW();
+				message.subject = new WString("Test subject");
+				message.noteText = new WString("Dit is een test tekst");
 
-			receips[1].ulRecipClass = 2;
-			receips[1].lpszName = new WString("TODO-CC");
-			receips[1].lpszAddress = new WString("SMTP:cc@cc.cc");
-			receips[1].write();
+				MapiRecipDescW[] receips = (MapiRecipDescW[]) new MapiRecipDescW().toArray(3);
 
-			receips[2].ulRecipClass = 3;
-			receips[2].lpszName = new WString("TODO-BCC");
-			receips[2].lpszAddress = new WString("SMTP:bcc@bcc.bcc");
-			receips[2].write();
+				receips[0].ulRecipClass = 1;
+				receips[0].lpszName = new WString("TODO-TO");
+				receips[0].lpszAddress = new WString("SMTP:to@to.to");
+				receips[0].write();
 
-			message.receips = receips[0].getPointer();
-			message.receipCount = 3;
+				receips[1].ulRecipClass = 2;
+				receips[1].lpszName = new WString("TODO-CC");
+				receips[1].lpszAddress = new WString("SMTP:cc@cc.cc");
+				receips[1].write();
 
-			MapiFileDescW[] files = (MapiFileDescW[]) new MapiFileDescW().toArray(1);
+				receips[2].ulRecipClass = 3;
+				receips[2].lpszName = new WString("TODO-BCC");
+				receips[2].lpszAddress = new WString("SMTP:bcc@bcc.bcc");
+				receips[2].write();
 
-			files[0].lpszPathName = new WString("C://temp//test.txt");
-			files[0].lpszFileName = new WString("test.txt");
-			files[0].write();
+				message.receips = receips[0].getPointer();
+				message.receipCount = 3;
 
-			message.files = files[0].getPointer();
-			message.fileCount = 1;
+				MapiFileDescW[] files = (MapiFileDescW[]) new MapiFileDescW().toArray(1);
 
-			int result = MapiLibrary.INSTANCE.MAPISendMailW(null, null, message, 4 | 8, 0);
-			// int result = MapiLibrary.INSTANCE.MAPISendMailW(null, hwnd, message, 4 | 8, 0);
-			System.out.println("MAPISendMail result: " + result);
+				files[0].lpszPathName = new WString("C://temp//test.txt");
+				files[0].lpszFileName = new WString("test.txt");
+				files[0].write();
+
+				message.files = files[0].getPointer();
+				message.fileCount = 1;
+
+				int result = mapi.MAPISendMailW(null, null, message, 4 | 8, 0);
+				// int result = MapiLibrary.INSTANCE.MAPISendMailW(null, hwnd, message, 4 | 8, 0);
+				System.out.println("MAPISendMail result: " + result);
+
+				if (result != 0) {
+					throw new ShareException("MAPISendMailW returned error: " + result);
+				}
+
+			} catch (UnsatisfiedLinkError e) {
+				throw new ShareException("Could not create email via Mapi", e);
+			} catch (Exception e) {
+				throw new ShareException("Could not create email via Mapi", e);
+			}
 
 		}
 

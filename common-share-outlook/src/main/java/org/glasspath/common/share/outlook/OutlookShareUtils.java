@@ -25,6 +25,7 @@ package org.glasspath.common.share.outlook;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.mail.Mailable;
 import org.glasspath.common.share.outlook.Outlook.Application;
 import org.glasspath.common.share.outlook.Outlook.MailItem;
@@ -38,11 +39,15 @@ public class OutlookShareUtils {
 
 	}
 
-	public static void createEmail(Mailable mailable) {
+	public static void createEmail(Mailable mailable) throws ShareException {
 
-		Ole32.INSTANCE.CoInitializeEx(Pointer.NULL, Ole32.COINIT_MULTITHREADED);
-
+		boolean inited = false;
+		
 		try {
+
+			Ole32.INSTANCE.CoInitializeEx(Pointer.NULL, Ole32.COINIT_MULTITHREADED);
+			
+			inited = true;
 
 			Outlook outlook = new Outlook();
 			// System.out.println(outlook.getVersion());
@@ -55,8 +60,8 @@ public class OutlookShareUtils {
 
 					// TODO
 
-					mailItem.addToRecipient("remco_poelstra@hotmail.com");
-					mailItem.addCcRecipient("na@na.na");
+					mailItem.addToRecipient("to@to.to");
+					mailItem.addCcRecipient("cc@cc.cc");
 					mailItem.addBccRecipient("TODO@TODO.TODO");
 
 					mailItem.setSubject("Dit is een test subject");
@@ -75,14 +80,16 @@ public class OutlookShareUtils {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new ShareException("Could not create Outlook (COM) email", e);
 		} finally {
-			Ole32.INSTANCE.CoUninitialize();
+			if (inited) {
+				Ole32.INSTANCE.CoUninitialize();
+			}
 		}
 
 	}
 
-	public static void createCommandLineEmail(Mailable mailable, String outlookExePath) {
+	public static void createCommandLineEmail(Mailable mailable, String outlookExePath) throws ShareException {
 
 		if (outlookExePath == null || outlookExePath.length() == 0) {
 			// TODO: Try to find executable, for now use the one that worked while creating this class
@@ -139,7 +146,7 @@ public class OutlookShareUtils {
 			// process.waitFor();
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new ShareException("Could not create Outlook (command line) email", e);
 		}
 
 	}

@@ -23,13 +23,9 @@
 package org.glasspath.common.share.mapi;
 
 import com.sun.jna.Library;
-import com.sun.jna.Native;
-import com.sun.jna.Platform;
 import com.sun.jna.Pointer;
 
 public interface MapiLibrary extends Library {
-
-	MapiLibrary INSTANCE = Platform.isWindows() ? (MapiLibrary) Native.load("mapi32", MapiLibrary.class) : null;
 
 	int MAPISendMailW(Pointer sess, Pointer hwnd, MapiMessageW message, int flg, int rsv);
 
