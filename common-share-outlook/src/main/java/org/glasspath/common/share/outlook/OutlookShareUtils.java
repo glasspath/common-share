@@ -24,6 +24,7 @@ package org.glasspath.common.share.outlook;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.mail.Mailable;
@@ -42,11 +43,11 @@ public class OutlookShareUtils {
 	public static void createEmail(Mailable mailable) throws ShareException {
 
 		boolean inited = false;
-		
+
 		try {
 
 			Ole32.INSTANCE.CoInitializeEx(Pointer.NULL, Ole32.COINIT_MULTITHREADED);
-			
+
 			inited = true;
 
 			Outlook outlook = new Outlook();
@@ -58,20 +59,46 @@ public class OutlookShareUtils {
 				MailItem mailItem = app.createMailItem();
 				if (mailItem != null) {
 
-					// TODO
+					for (String to : mailable.getTo()) {
+						mailItem.addToRecipient(to);
+					}
 
-					mailItem.addToRecipient("to@to.to");
-					mailItem.addCcRecipient("cc@cc.cc");
-					mailItem.addBccRecipient("TODO@TODO.TODO");
+					for (String cc : mailable.getCc()) {
+						mailItem.addCcRecipient(cc);
+					}
 
-					mailItem.setSubject("Dit is een test subject");
+					for (String bcc : mailable.getBcc()) {
+						mailItem.addBccRecipient(bcc);
+					}
 
-					mailItem.addAttachment("C:\\temp\\test.txt");
-					mailItem.addAttachment("C:\\werkmap remco\\screenshots\\sparck-camera-station-001.png", "sparck-camera-station-001.png");
+					if (mailable.getSubject() != null && mailable.getSubject().length() > 0) {
+						mailItem.setSubject(mailable.getSubject());
+					}
 
-					mailItem.setBodyFormat(Outlook.OL_BODY_FORMAT_OL_FORMAT_HTML);
-					mailItem.setBody("Dit is een test");
-					mailItem.setHTMLBody("<html><body>Dit is een <b>test</b><br>met <i>meerdere</i><br>regels<br>en een image: <img src=\"cid:sparck-camera-station-001.png\"></body></html>");
+					if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
+						mailItem.setBodyFormat(Outlook.OL_BODY_FORMAT_OL_FORMAT_HTML);
+						mailItem.setHTMLBody(mailable.getHtml());
+					} else {
+						mailItem.setBodyFormat(Outlook.OL_BODY_FORMAT_OL_FORMAT_PLAIN);
+					}
+
+					if (mailable.getText() != null && mailable.getText().length() > 0) {
+						mailItem.setBody(mailable.getText());
+					}
+
+					if (mailable.getImages() != null) {
+						for (Entry<String, String> entry : mailable.getImages().entrySet()) {
+							if (entry.getValue() != null) {
+								mailItem.addAttachment(entry.getValue(), entry.getKey());
+							}
+						}
+					}
+
+					if (mailable.getAttachments() != null) {
+						for (String attachment : mailable.getAttachments()) {
+							mailItem.addAttachment(attachment);
+						}
+					}
 
 					mailItem.Display();
 
