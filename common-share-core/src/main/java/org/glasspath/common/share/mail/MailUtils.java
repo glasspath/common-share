@@ -86,17 +86,37 @@ public class MailUtils {
 		return port > 0;
 	}
 
-	public static String createRecipientsString(List<String> recipients, String separator) {
+	public static String createElementsString(List<String> elements, String separator) {
 
 		String s = ""; //$NON-NLS-1$
 
-		if (recipients != null && recipients.size() > 0) {
+		if (elements != null && elements.size() > 0) {
 
-			s = recipients.get(0);
+			s = elements.get(0);
 
-			if (recipients.size() > 1) {
-				for (int i = 1; i < recipients.size(); i++) {
-					s += separator + recipients.get(i);
+			if (elements.size() > 1) {
+				for (int i = 1; i < elements.size(); i++) {
+					s += separator + elements.get(i);
+				}
+			}
+
+		}
+
+		return s;
+
+	}
+	
+	public static String createElementsString(List<String> elements, String prepend, String append, String separator) {
+
+		String s = ""; //$NON-NLS-1$
+
+		if (elements != null && elements.size() > 0) {
+
+			s = prepend + elements.get(0) + append;
+
+			if (elements.size() > 1) {
+				for (int i = 1; i < elements.size(); i++) {
+					s += separator + prepend + elements.get(i) + append;
 				}
 			}
 
@@ -110,7 +130,7 @@ public class MailUtils {
 
 		try {
 
-			String mailto = "mailto:" + createRecipientsString(mailable.getTo(), ",");
+			String mailto = "mailto:" + createElementsString(mailable.getTo(), ",");
 
 			String subject = "";
 			if (mailable.getSubject() != null) {
@@ -119,11 +139,11 @@ public class MailUtils {
 			mailto += "?subject=" + subject;
 
 			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
-				mailto += "&cc=" + createRecipientsString(mailable.getCc(), ",");
+				mailto += "&cc=" + createElementsString(mailable.getCc(), ",");
 			}
 
 			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
-				mailto += "&bcc=" + createRecipientsString(mailable.getBcc(), ",");
+				mailto += "&bcc=" + createElementsString(mailable.getBcc(), ",");
 			}
 
 			String body = "";

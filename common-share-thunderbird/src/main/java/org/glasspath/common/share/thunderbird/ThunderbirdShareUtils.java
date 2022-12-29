@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.glasspath.common.share.ShareException;
+import org.glasspath.common.share.mail.MailUtils;
 import org.glasspath.common.share.mail.Mailable;
 
 public class ThunderbirdShareUtils {
@@ -34,22 +35,77 @@ public class ThunderbirdShareUtils {
 
 	}
 
+	public static String getExecutablePath() {
+
+		String executablePath = null;
+
+		// TODO!
+		executablePath = "C:/Program Files/Mozilla Thunderbird/thunderbird";
+
+		return executablePath;
+
+	}
+
 	public static void createCommandLineEmail(Mailable mailable) throws ShareException {
+		createCommandLineEmail(getExecutablePath(), mailable);
+	}
 
-		// TODO
-		
-		List<String> command = new ArrayList<>();
-		command.add("thunderbird");
+	public static void createCommandLineEmail(String executablePath, Mailable mailable) throws ShareException {
 
-		try {
+		if (executablePath != null && executablePath.length() > 0) {
 
-			new ProcessBuilder(command).inheritIO().start();
+			List<String> elements = new ArrayList<>();
 
-			// Process process = new ProcessBuilder(command).inheritIO().start();
-			// process.waitFor();
+			if (mailable.getTo() != null && mailable.getTo().size() > 0) {
+				elements.add("to='" + MailUtils.createElementsString(mailable.getTo(), ",") + "'");
+			}
 
-		} catch (Exception e) {
-			throw new ShareException("Could not create Thunderbird (command line) email", e);
+			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
+				elements.add("cc='" + MailUtils.createElementsString(mailable.getCc(), ",") + "'");
+			}
+
+			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
+				elements.add("bcc='" + MailUtils.createElementsString(mailable.getBcc(), ",") + "'");
+			}
+
+			String subject = "";
+			if (mailable.getSubject() != null) {
+				subject = mailable.getSubject();
+			}
+			elements.add("subject='" + subject + "'");
+
+			String body = "";
+			if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
+				body = mailable.getHtml();
+			} else if (mailable.getText() != null) {
+				body = mailable.getText();
+			}
+			elements.add("body='" + body + "'");
+
+			if (mailable.getAttachments() != null && mailable.getAttachments().size() > 0) {
+				elements.add("attachment='" + MailUtils.createElementsString(mailable.getAttachments(), "file:///", "", ",") + "'");
+			}
+
+			List<String> command = new ArrayList<>();
+			command.add(executablePath);
+			command.add("-compose");
+			// command.add("to='john@example.com,kathy@example.com',cc='britney@example.com',subject='dinner',body='<html><body>How about<br><br>dinner tonight?</body></html>',attachment='file:///C:/project/test1.txt,file:///C:/project/test2.txt'");
+			// command.add("to='john@example.com,kathy@example.com',cc='britney@example.com,test@test.nl',bcc='britney2@example.com,test2@test2.nl',subject='dinner',body='How about\n\ndinner tonight?',attachment='file:///C:/project/test1.txt,file:///C:/project/test2.txt'");
+			command.add(MailUtils.createElementsString(elements, ","));
+
+			try {
+
+				new ProcessBuilder(command).inheritIO().start();
+
+				// Process process = new ProcessBuilder(command).inheritIO().start();
+				// process.waitFor();
+
+			} catch (Exception e) {
+				throw new ShareException("Could not create Thunderbird (command line) email", e);
+			}
+
+		} else {
+			throw new ShareException("Could not create Thunderbird (command line) email because executablePath is not valid");
 		}
 
 	}

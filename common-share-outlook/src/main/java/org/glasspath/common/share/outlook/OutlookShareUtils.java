@@ -128,64 +128,80 @@ public class OutlookShareUtils {
 
 	}
 
-	public static void createCommandLineEmail(Mailable mailable, String outlookExePath) throws ShareException {
+	public static String getExecutablePath() {
 
-		if (outlookExePath == null || outlookExePath.length() == 0) {
-			// TODO: Try to find executable, for now use the one that worked while creating this class
-			outlookExePath = "C:/Program Files/Microsoft Office/root/Office16/outlook.exe";
-		}
+		String executablePath = null;
 
-		List<String> command = new ArrayList<>();
-		command.add(outlookExePath);
-		command.add("/c");
-		command.add("ipm.note");
+		// TODO!
+		executablePath = "C:/Program Files/Microsoft Office/root/Office16/outlook.exe";
 
-		String mArg;
+		return executablePath;
 
-		// TODO: Can we add multiple to recipients?
-		if (mailable.getTo().size() > 0) {
-			mArg = mailable.getTo().get(0);
+	}
+
+	public static void createCommandLineEmail(Mailable mailable) throws ShareException {
+		createCommandLineEmail(getExecutablePath(), mailable);
+	}
+
+	public static void createCommandLineEmail(String executablePath, Mailable mailable) throws ShareException {
+
+		if (executablePath != null && executablePath.length() > 0) {
+
+			List<String> command = new ArrayList<>();
+			command.add(executablePath);
+			command.add("/c");
+			command.add("ipm.note");
+
+			String mArg;
+
+			// TODO: Can we add multiple to recipients?
+			if (mailable.getTo().size() > 0) {
+				mArg = mailable.getTo().get(0);
+			} else {
+				mArg = "to@to.to"; // TODO
+			}
+
+			if (mailable.getSubject().length() > 0) {
+				mArg += "?subject=" + mailable.getSubject();
+			} else {
+				mArg += "?subject=Subject";
+			}
+
+			// TODO: Can we add multiple CC recipients?
+			if (mailable.getCc().size() > 0) {
+				mArg += "&cc=" + mailable.getCc().get(0);
+			}
+
+			// TODO: Can we add multiple BCC recipients?
+			if (mailable.getBcc().size() > 0) {
+				mArg += "&bcc=" + mailable.getBcc().get(0);
+			}
+
+			// TODO: Can we set a html body?
+			mArg += "&body=" + mailable.getText().replace("\n", "%0D%0A");
+
+			command.add("/m");
+			command.add(mArg);
+
+			// TODO: Can we add multiple attachments?
+			if (mailable.getAttachments().size() > 0) {
+				command.add("/a");
+				command.add(mailable.getAttachments().get(0));
+			}
+
+			try {
+
+				new ProcessBuilder(command).inheritIO().start();
+
+				// Process process = new ProcessBuilder(command).inheritIO().start();
+				// process.waitFor();
+
+			} catch (Exception e) {
+				throw new ShareException("Could not create Outlook (command line) email", e);
+			}
+
 		} else {
-			mArg = "to@to.to"; // TODO
-		}
-
-		if (mailable.getSubject().length() > 0) {
-			mArg += "?subject=" + mailable.getSubject();
-		} else {
-			mArg += "?subject=Subject";
-		}
-
-		// TODO: Can we add multiple CC recipients?
-		if (mailable.getCc().size() > 0) {
-			mArg += "&cc=" + mailable.getCc().get(0);
-		}
-
-		// TODO: Can we add multiple BCC recipients?
-		if (mailable.getBcc().size() > 0) {
-			mArg += "&bcc=" + mailable.getBcc().get(0);
-		}
-
-		// TODO: Can we set a html body?
-		mArg += "&body=" + mailable.getText().replace("\n", "%0D%0A");
-
-		command.add("/m");
-		command.add(mArg);
-
-		// TODO: Can we add multiple attachements?
-		if (mailable.getAttachments().size() > 0) {
-			command.add("/a");
-			command.add(mailable.getAttachments().get(0));
-		}
-
-		try {
-
-			new ProcessBuilder(command).inheritIO().start();
-
-			// Process process = new ProcessBuilder(command).inheritIO().start();
-			// process.waitFor();
-
-		} catch (Exception e) {
-			throw new ShareException("Could not create Outlook (command line) email", e);
+			throw new ShareException("Could not create Outlook (command line) email because executablePath is not valid");
 		}
 
 	}
