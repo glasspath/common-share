@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.glasspath.common.share.ShareException;
+import org.glasspath.common.share.ShareUtils;
 import org.glasspath.common.share.mail.MailUtils;
 import org.glasspath.common.share.mail.Mailable;
 
@@ -37,10 +38,23 @@ public class ThunderbirdShareUtils {
 
 	public static String getExecutablePath() {
 
-		String executablePath = null;
+		// TODO: This is a bit of a hack..
 
-		// TODO!
-		executablePath = "C:/Program Files/Mozilla Thunderbird/thunderbird";
+		List<String> executablePaths = new ArrayList<>();
+
+		// Windows (let's also check the D: partition)
+		executablePaths.add("C:/Program Files/Mozilla Thunderbird/thunderbird.exe");
+		executablePaths.add("C:/Program Files (x86)/Mozilla Thunderbird/thunderbird.exe");
+		executablePaths.add("D:/Program Files/Mozilla Thunderbird/thunderbird.exe");
+		executablePaths.add("D:/Program Files (x86)/Mozilla Thunderbird/thunderbird.exe");
+
+		// TODO: How to handle MacOS and Linux?
+
+		String executablePath = ShareUtils.getFirstExistingFile(executablePaths, false);
+
+		if (executablePath == null) {
+			executablePath = "thunderbird";
+		}
 
 		return executablePath;
 

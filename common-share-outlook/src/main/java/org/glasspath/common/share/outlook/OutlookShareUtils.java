@@ -22,11 +22,14 @@
  */
 package org.glasspath.common.share.outlook;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
 import org.glasspath.common.share.ShareException;
+import org.glasspath.common.share.ShareUtils;
+import org.glasspath.common.share.mail.MailUtils;
 import org.glasspath.common.share.mail.Mailable;
 import org.glasspath.common.share.outlook.Outlook.Application;
 import org.glasspath.common.share.outlook.Outlook.MailItem;
@@ -130,10 +133,48 @@ public class OutlookShareUtils {
 
 	public static String getExecutablePath() {
 
+		// TODO: This is a bit of a hack..
+
 		String executablePath = null;
 
-		// TODO!
-		executablePath = "C:/Program Files/Microsoft Office/root/Office16/outlook.exe";
+		List<String> rootDirPaths = new ArrayList<>();
+
+		// Path used during development: "C:/Program Files/Microsoft Office/root/Office16/outlook.exe"
+		// Let's also check the D: partition
+		rootDirPaths.add("C:/Program Files/Microsoft Office/root");
+		rootDirPaths.add("C:/Program Files (x86)/Microsoft Office/root");
+		rootDirPaths.add("D:/Program Files/Microsoft Office/root");
+		rootDirPaths.add("D:/Program Files (x86)/Microsoft Office/root");
+
+		String rootDirPath = ShareUtils.getFirstExistingFile(rootDirPaths, true);
+		if (rootDirPath != null) {
+
+			List<File> officeDirs = ShareUtils.findDirectories(new File(rootDirPath), "office");
+			if (officeDirs != null) {
+
+				for (File officeDir : officeDirs) {
+
+					try {
+
+						File outlookFile = new File(officeDir, "outlook.exe");
+						if (outlookFile.exists() && !outlookFile.isDirectory()) {
+							executablePath = outlookFile.getAbsolutePath();
+							break;
+						}
+
+					} catch (Exception e) {
+						// TODO?
+					}
+
+				}
+
+			}
+
+		}
+
+		if (executablePath == null) {
+			executablePath = "outlook";
+		}
 
 		return executablePath;
 
@@ -147,46 +188,42 @@ public class OutlookShareUtils {
 
 		if (executablePath != null && executablePath.length() > 0) {
 
+			String arg = MailUtils.createElementsString(mailable.getTo(), ";");
+
+			String p = "?";
+
+			if (mailable.getSubject() != null && mailable.getSubject().length() > 0) {
+				arg += p + "subject=" + mailable.getSubject();
+				p = "&";
+			}
+
+			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
+				arg += p + "cc=" + MailUtils.createElementsString(mailable.getCc(), ";");
+				p = "&";
+			}
+
+			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
+				arg += p + "bcc=" + MailUtils.createElementsString(mailable.getBcc(), ";");
+				p = "&";
+			}
+
+			// TODO: Can we set a html body?
+			if (mailable.getText() != null && mailable.getText().length() > 0) {
+				arg += p + "body=" + mailable.getText().replace("\n", "%0D%0A");
+			}
+
 			List<String> command = new ArrayList<>();
 			command.add(executablePath);
 			command.add("/c");
 			command.add("ipm.note");
-
-			String mArg;
-
-			// TODO: Can we add multiple to recipients?
-			if (mailable.getTo().size() > 0) {
-				mArg = mailable.getTo().get(0);
-			} else {
-				mArg = "to@to.to"; // TODO
-			}
-
-			if (mailable.getSubject().length() > 0) {
-				mArg += "?subject=" + mailable.getSubject();
-			} else {
-				mArg += "?subject=Subject";
-			}
-
-			// TODO: Can we add multiple CC recipients?
-			if (mailable.getCc().size() > 0) {
-				mArg += "&cc=" + mailable.getCc().get(0);
-			}
-
-			// TODO: Can we add multiple BCC recipients?
-			if (mailable.getBcc().size() > 0) {
-				mArg += "&bcc=" + mailable.getBcc().get(0);
-			}
-
-			// TODO: Can we set a html body?
-			mArg += "&body=" + mailable.getText().replace("\n", "%0D%0A");
-
 			command.add("/m");
-			command.add(mArg);
+			command.add(arg);
 
 			// TODO: Can we add multiple attachments?
-			if (mailable.getAttachments().size() > 0) {
+			String attachment = ShareUtils.getFirstExistingFile(mailable.getAttachments(), false);
+			if (attachment != null) {
 				command.add("/a");
-				command.add(mailable.getAttachments().get(0));
+				command.add(attachment);
 			}
 
 			try {

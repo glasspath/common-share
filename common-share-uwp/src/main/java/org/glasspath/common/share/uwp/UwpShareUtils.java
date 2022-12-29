@@ -28,6 +28,7 @@ import javax.swing.JFrame;
 
 import org.glasspath.common.Common;
 import org.glasspath.common.share.ShareException;
+import org.glasspath.common.share.ShareUtils;
 import org.glasspath.common.share.mail.Mailable;
 
 import com.sun.jna.Native;
@@ -68,30 +69,13 @@ public class UwpShareUtils {
 			}
 
 			// TODO: Add all attachments
-			String attachmentPath = "";
-			if (mailable.getAttachments() != null) {
+			String attachmentPath = ShareUtils.getFirstExistingFile(mailable.getAttachments(), false);
+			if (description == null && attachmentPath != null) {
+				description = new File(attachmentPath).getName();
+			}
 
-				for (String attachment : mailable.getAttachments()) {
-
-					if (attachment.length() > 0) {
-
-						File attachmentFile = new File(attachment);
-						if (attachmentFile.exists() && !attachmentFile.isDirectory()) {
-
-							attachmentPath = attachment;
-
-							if (description == null) {
-								description = attachmentFile.getName();
-							}
-
-							break;
-
-						}
-
-					}
-
-				}
-
+			if (attachmentPath == null) {
+				attachmentPath = "";
 			}
 
 			if (description == null) {
