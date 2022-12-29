@@ -32,17 +32,11 @@ import org.glasspath.common.share.mail.Mailable;
 
 public class AppKitShareUtils {
 
-	public static String TEST_ATTACHEMENT = "/Users/remcopoelstra/Documents/temp/export.csv";
-
 	private AppKitShareUtils() {
 
 	}
 
 	public static void createEmail(Mailable mailable) throws ShareException {
-
-		// TODO: Remove
-		mailable.getAttachments().add(TEST_ATTACHEMENT);
-		mailable.getAttachments().add("/Users/remcopoelstra/Documents/temp/22008.pdf");
 
 		List<NSObject> objects = new ArrayList<>();
 
@@ -99,21 +93,22 @@ public class AppKitShareUtils {
 
 			}
 
-			if (mailable.getSubject() != null && mailable.getSubject().length() > 0) {
-
-				NSString subjectString = new NSString(mailable.getSubject());
-				if (!Foundation.addObject(subjectString, objects)) {
-					throw new ShareException("Could not create NSString(mailable.getSubject())");
-				}
-
-				sharingService.setSubject(subjectString);
-
+			String subject = "";
+			if (mailable.getSubject() != null) {
+				subject = mailable.getSubject();
 			}
 
+			NSString subjectString = new NSString(subject);
+			if (!Foundation.addObject(subjectString, objects)) {
+				throw new ShareException("Could not create NSString(subject)");
+			}
+
+			sharingService.setSubject(subjectString);
+			
 			String body = "";
 			if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
 				body = mailable.getHtml();
-			} else if (mailable.getText() != null && mailable.getText().length() > 0) {
+			} else if (mailable.getText() != null) {
 				body = mailable.getText();
 			}
 
@@ -129,7 +124,7 @@ public class AppKitShareUtils {
 
 			// Let's make sure the attachments are valid (NSException will crash our application)
 			List<String> attachments = new ArrayList<>();
-			if (mailable.getAttachments() != null && mailable.getAttachments().size() > 0) {
+			if (mailable.getAttachments() != null) {
 
 				for (String attachment : mailable.getAttachments()) {
 

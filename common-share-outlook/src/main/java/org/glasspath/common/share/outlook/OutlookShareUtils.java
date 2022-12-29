@@ -59,20 +59,28 @@ public class OutlookShareUtils {
 				MailItem mailItem = app.createMailItem();
 				if (mailItem != null) {
 
-					for (String to : mailable.getTo()) {
-						mailItem.addToRecipient(to);
+					if (mailable.getTo() != null) {
+						for (String to : mailable.getTo()) {
+							mailItem.addToRecipient(to);
+						}
 					}
 
-					for (String cc : mailable.getCc()) {
-						mailItem.addCcRecipient(cc);
+					if (mailable.getCc() != null) {
+						for (String cc : mailable.getCc()) {
+							mailItem.addCcRecipient(cc);
+						}
 					}
 
-					for (String bcc : mailable.getBcc()) {
-						mailItem.addBccRecipient(bcc);
+					if (mailable.getBcc() != null) {
+						for (String bcc : mailable.getBcc()) {
+							mailItem.addBccRecipient(bcc);
+						}
 					}
 
-					if (mailable.getSubject() != null && mailable.getSubject().length() > 0) {
+					if (mailable.getSubject() != null) {
 						mailItem.setSubject(mailable.getSubject());
+					} else {
+						mailItem.setSubject("");
 					}
 
 					if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
@@ -82,7 +90,7 @@ public class OutlookShareUtils {
 						mailItem.setBodyFormat(Outlook.OL_BODY_FORMAT_OL_FORMAT_PLAIN);
 					}
 
-					if (mailable.getText() != null && mailable.getText().length() > 0) {
+					if (mailable.getText() != null) {
 						mailItem.setBody(mailable.getText());
 					}
 
@@ -102,8 +110,12 @@ public class OutlookShareUtils {
 
 					mailItem.Display();
 
+				} else {
+					throw new ShareException("Could not create Outlook (COM) email because mailItem is null");
 				}
 
+			} else {
+				throw new ShareException("Could not create Outlook (COM) email because app is null");
 			}
 
 		} catch (Exception e) {

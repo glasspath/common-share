@@ -32,6 +32,7 @@ import org.glasspath.common.share.ShareException;
 
 public class MailUtils {
 
+	// TODO: Is not yet correctly parsing all input strings
 	public static List<String> parseRecipients(String recipients) {
 
 		List<String> parsed = new ArrayList<>();
@@ -89,7 +90,7 @@ public class MailUtils {
 
 		String s = ""; //$NON-NLS-1$
 
-		if (recipients.size() > 0) {
+		if (recipients != null && recipients.size() > 0) {
 
 			s = recipients.get(0);
 
@@ -111,17 +112,25 @@ public class MailUtils {
 
 			String mailto = "mailto:" + createRecipientsString(mailable.getTo(), ",");
 
-			mailto += "?subject=" + mailable.getSubject();
+			String subject = "";
+			if (mailable.getSubject() != null) {
+				subject = mailable.getSubject();
+			}
+			mailto += "?subject=" + subject;
 
-			if (mailable.getCc().size() > 0) {
+			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
 				mailto += "&cc=" + createRecipientsString(mailable.getCc(), ",");
 			}
 
-			if (mailable.getBcc().size() > 0) {
+			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
 				mailto += "&bcc=" + createRecipientsString(mailable.getBcc(), ",");
 			}
 
-			mailto += "&body=" + mailable.getText();
+			String body = "";
+			if (mailable.getText() != null) {
+				body = mailable.getText();
+			}
+			mailto += "&body=" + body;
 
 			// TODO?
 			mailto = mailto.replace(" ", "%20");

@@ -86,23 +86,29 @@ public class MailShareUtils {
 				builder.from(account.getName() != null ? account.getName() : account.getEmail(), account.getEmail());
 			}
 
-			for (String to : mailable.getTo()) {
-				builder.to(to);
+			if (mailable.getTo() != null) {
+				for (String to : mailable.getTo()) {
+					builder.to(to);
+				}
 			}
 
-			for (String cc : mailable.getCc()) {
-				builder.cc(cc);
+			if (mailable.getCc() != null) {
+				for (String cc : mailable.getCc()) {
+					builder.cc(cc);
+				}
 			}
 
-			for (String bcc : mailable.getBcc()) {
-				builder.bcc(bcc);
+			if (mailable.getBcc() != null) {
+				for (String bcc : mailable.getBcc()) {
+					builder.bcc(bcc);
+				}
 			}
 
-			if (mailable.getSubject() != null && mailable.getSubject().length() > 0) {
+			if (mailable.getSubject() != null) {
 				builder.withSubject(mailable.getSubject());
 			}
 
-			if (mailable.getText() != null && mailable.getText().length() > 0) {
+			if (mailable.getText() != null) {
 				builder.withPlainText(mailable.getText());
 			}
 

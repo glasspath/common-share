@@ -22,6 +22,8 @@
  */
 package org.glasspath.common.share.uwp;
 
+import java.io.File;
+
 import javax.swing.JFrame;
 
 import org.glasspath.common.Common;
@@ -37,33 +39,67 @@ public class UwpShareUtils {
 
 	}
 
-	public static void showShareMenu(JFrame frame, Mailable mailable, String assemblyResolvePath) throws ShareException {
+	public static void showShareMenu(JFrame frame, Mailable mailable, String description, String assemblyResolvePath) throws ShareException {
 
 		try {
-
-			// assemblyResolvePath = "C:\\project\\invoice\\eclipse workspace\\revenue\\revenue-main\\target\\jpackage-output\\Revenue\\app";
-			// assemblyResolvePath = "C:\\project\\invoice\\eclipse workspace\\Tests";
 
 			Common.LOGGER.info("Loading share-utils-interop.dll from: " + assemblyResolvePath);
 			ShareUtilsInterop shareUtilsInterop = Native.load(assemblyResolvePath + "/share-utils-interop.dll", ShareUtilsInterop.class);
 
 			Pointer componentPointer = Native.getComponentPointer(frame);
+			long windowHandle = Pointer.nativeValue(componentPointer);
 
-			// assemblyResolvePath = assemblyResolvePath.replace("/", "\\");
 			Common.LOGGER.info("Setting assembly resolve path: " + assemblyResolvePath);
 			System.out.println("SetAssemblyResolvePath: " + shareUtilsInterop.SetAssemblyResolvePath(assemblyResolvePath));
 
-			/*
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
+			String title = "";
+			if (mailable.getSubject() != null) {
+				title = mailable.getSubject();
 			}
-			*/
 
-			// TODO
+			String text = "";
+			if (mailable.getText() != null) {
+				text = mailable.getText();
+			}
+
+			String html = "";
+			if (mailable.getHtml() != null && mailable.getHtml().length() > 0) {
+				html = mailable.getHtml();
+			}
+
+			// TODO: Add all attachments
+			String attachmentPath = "";
+			if (mailable.getAttachments() != null) {
+
+				for (String attachment : mailable.getAttachments()) {
+
+					if (attachment.length() > 0) {
+
+						File attachmentFile = new File(attachment);
+						if (attachmentFile.exists() && !attachmentFile.isDirectory()) {
+
+							attachmentPath = attachment;
+
+							if (description == null) {
+								description = attachmentFile.getName();
+							}
+
+							break;
+
+						}
+
+					}
+
+				}
+
+			}
+
+			if (description == null) {
+				description = "";
+			}
+
 			Common.LOGGER.info("Showing UWP share menu");
-			System.out.println(shareUtilsInterop.ShowEmailShareMenu(Pointer.nativeValue(componentPointer), mailable.getSubject(), "TestDescription", mailable.getText(), mailable.getHtml(), "C:\\temp\\test.txt"));
+			System.out.println(shareUtilsInterop.ShowEmailShareMenu(windowHandle, title, description, text, html, attachmentPath));
 
 		} catch (UnsatisfiedLinkError e) {
 			throw new ShareException("Could not show share menu", e);
