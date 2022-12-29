@@ -31,6 +31,11 @@ import com.sun.jna.WString;
 
 public class MapiRecipDescW extends Structure {
 
+	public static final int MAPI_ORIG = 0;
+	public static final int MAPI_TO = 1;
+	public static final int MAPI_CC = 2;
+	public static final int MAPI_BCC = 3;
+
 	public int ulReserved = 0;
 	public int ulRecipClass = 0;
 	public WString lpszName = null;

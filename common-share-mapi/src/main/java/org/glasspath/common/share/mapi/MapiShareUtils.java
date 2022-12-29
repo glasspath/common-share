@@ -22,6 +22,11 @@
  */
 package org.glasspath.common.share.mapi;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.mail.Mailable;
 
@@ -43,44 +48,141 @@ public class MapiShareUtils {
 
 				MapiLibrary mapi = Platform.isWindows() ? (MapiLibrary) Native.load("mapi32", MapiLibrary.class) : null;
 
-				// TODO
-
 				MapiMessageW message = new MapiMessageW();
-				message.subject = new WString("Test subject");
-				message.noteText = new WString("Dit is een test tekst");
 
-				MapiRecipDescW[] receips = (MapiRecipDescW[]) new MapiRecipDescW().toArray(3);
+				int recipientCount = 0;
 
-				receips[0].ulRecipClass = 1;
-				receips[0].lpszName = new WString("TODO-TO");
-				receips[0].lpszAddress = new WString("SMTP:to@to.to");
-				receips[0].write();
+				if (mailable.getFrom() != null) {
+					recipientCount += 1;
+				}
+				if (mailable.getTo() != null) {
+					recipientCount += mailable.getTo().size();
+				}
+				if (mailable.getCc() != null) {
+					recipientCount += mailable.getCc().size();
+				}
+				if (mailable.getBcc() != null) {
+					recipientCount += mailable.getBcc().size();
+				}
 
-				receips[1].ulRecipClass = 2;
-				receips[1].lpszName = new WString("TODO-CC");
-				receips[1].lpszAddress = new WString("SMTP:cc@cc.cc");
-				receips[1].write();
+				MapiRecipDescW[] recipients = (MapiRecipDescW[]) new MapiRecipDescW().toArray(recipientCount);
 
-				receips[2].ulRecipClass = 3;
-				receips[2].lpszName = new WString("TODO-BCC");
-				receips[2].lpszAddress = new WString("SMTP:bcc@bcc.bcc");
-				receips[2].write();
+				int i = 0;
 
-				message.receips = receips[0].getPointer();
-				message.receipCount = 3;
+				if (mailable.getFrom() != null) {
 
-				MapiFileDescW[] files = (MapiFileDescW[]) new MapiFileDescW().toArray(1);
+					recipients[i].ulRecipClass = MapiRecipDescW.MAPI_ORIG;
+					recipients[i].lpszName = new WString(mailable.getFrom());
+					recipients[i].lpszAddress = new WString("SMTP:" + mailable.getFrom());
+					recipients[i].write();
 
-				files[0].lpszPathName = new WString("C://temp//test.txt");
-				files[0].lpszFileName = new WString("test.txt");
-				files[0].write();
+					i++;
 
-				message.files = files[0].getPointer();
-				message.fileCount = 1;
+				}
 
+				if (mailable.getTo() != null) {
+
+					for (String to : mailable.getTo()) {
+
+						recipients[i].ulRecipClass = MapiRecipDescW.MAPI_TO;
+						recipients[i].lpszName = new WString(to);
+						recipients[i].lpszAddress = new WString("SMTP:" + to);
+						recipients[i].write();
+
+						i++;
+
+					}
+
+				}
+
+				if (mailable.getCc() != null) {
+
+					for (String cc : mailable.getCc()) {
+
+						recipients[i].ulRecipClass = MapiRecipDescW.MAPI_CC;
+						recipients[i].lpszName = new WString(cc);
+						recipients[i].lpszAddress = new WString("SMTP:" + cc);
+						recipients[i].write();
+
+						i++;
+
+					}
+
+				}
+
+				if (mailable.getBcc() != null) {
+
+					for (String bcc : mailable.getBcc()) {
+
+						recipients[i].ulRecipClass = MapiRecipDescW.MAPI_BCC;
+						recipients[i].lpszName = new WString(bcc);
+						recipients[i].lpszAddress = new WString("SMTP:" + bcc);
+						recipients[i].write();
+
+						i++;
+
+					}
+
+				}
+
+				message.receips = recipients[0].getPointer();
+				message.receipCount = recipientCount;
+
+				if (mailable.getSubject() != null) {
+					message.subject = new WString(mailable.getSubject());
+				} else {
+					message.subject = new WString("");
+				}
+
+				if (mailable.getText() != null) {
+					message.noteText = new WString(mailable.getText());
+				} else {
+					message.noteText = new WString("");
+				}
+
+				if (mailable.getAttachments() != null && mailable.getAttachments().size() > 0) {
+
+					Map<String, String> attachments = new HashMap<>();
+
+					for (String attachment : mailable.getAttachments()) {
+
+						if (attachment.length() > 0) {
+
+							File attachmentFile = new File(attachment);
+							if (attachmentFile.exists() && !attachmentFile.isDirectory()) {
+								attachments.put(attachment, attachmentFile.getName());
+							}
+
+						}
+
+					}
+
+					if (attachments.size() > 0) {
+
+						MapiFileDescW[] files = (MapiFileDescW[]) new MapiFileDescW().toArray(attachments.size());
+
+						i = 0;
+
+						for (Entry<String, String> entry : mailable.getImages().entrySet()) {
+
+							files[i].lpszPathName = new WString(entry.getKey());
+							files[i].lpszFileName = new WString(entry.getValue());
+							files[i].write();
+
+							i++;
+
+						}
+
+						message.fileCount = attachments.size();
+						message.files = files[0].getPointer();
+
+					}
+
+				}
+
+				// TODO: Explain arguments
 				int result = mapi.MAPISendMailW(null, null, message, 4 | 8, 0);
 				// int result = MapiLibrary.INSTANCE.MAPISendMailW(null, hwnd, message, 4 | 8, 0);
-				System.out.println("MAPISendMail result: " + result);
 
 				if (result != 0) {
 					throw new ShareException("MAPISendMailW returned error: " + result);
