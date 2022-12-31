@@ -153,7 +153,7 @@ public class ShareUtils {
 
 			int i = name.lastIndexOf('.');
 
-			if (i > 0 && i < file.length() - 1) {
+			if (i > 0 && i < name.length() - 1) {
 
 				extension = name.substring(i + 1);
 
