@@ -28,6 +28,29 @@ import java.util.List;
 
 public class ShareUtils {
 
+	public static String[] IMAGE_FILE_EXTENSIONS = new String[] {
+			"png",
+			"jpg",
+			"jpeg",
+			"gif",
+			"tiff",
+			"svg"
+	};
+
+	public static String[] VIDEO_FILE_EXTENSIONS = new String[] {
+			"mp4",
+			"mpeg",
+			"mov",
+			"wmv",
+			"avi",
+			"flv",
+			"swf"
+	};
+
+	public static String[] PDF_FILE_EXTENSIONS = new String[] {
+			"pdf"
+	};
+
 	private ShareUtils() {
 
 	}
@@ -87,6 +110,62 @@ public class ShareUtils {
 		}
 
 		return dirs;
+
+	}
+
+	public static boolean isImageFile(File file) {
+		return checkExtionsion(file, IMAGE_FILE_EXTENSIONS);
+	}
+
+	public static boolean isVideoFile(File file) {
+		return checkExtionsion(file, VIDEO_FILE_EXTENSIONS);
+	}
+
+	public static boolean isPdfFile(File file) {
+		return checkExtionsion(file, PDF_FILE_EXTENSIONS);
+	}
+
+	private static boolean checkExtionsion(File file, String[] extensions) {
+
+		String extension = getExtension(file, true);
+
+		if (extension != null) {
+
+			for (String ext : extensions) {
+				if (ext.equals(extension)) {
+					return true;
+				}
+			}
+
+		}
+
+		return false;
+
+	}
+
+	public static String getExtension(File file, boolean lowerCase) {
+
+		String extension = null;
+
+		if (file != null) {
+
+			String name = file.getName();
+
+			int i = name.lastIndexOf('.');
+
+			if (i > 0 && i < file.length() - 1) {
+
+				extension = name.substring(i + 1);
+
+				if (lowerCase) {
+					extension = extension.toLowerCase();
+				}
+
+			}
+
+		}
+
+		return extension;
 
 	}
 
