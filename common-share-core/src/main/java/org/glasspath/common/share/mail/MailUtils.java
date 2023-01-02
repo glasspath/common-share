@@ -23,6 +23,8 @@
 package org.glasspath.common.share.mail;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -158,6 +160,42 @@ public class MailUtils {
 			mailto = mailto.replace("\n", "%0D%0A");
 
 			return URI.create(mailto);
+
+		} catch (Exception e) {
+			throw new ShareException("Could not create mailto URI", e);
+		}
+
+	}
+	
+	public static URI createGmailMailtoUri(Mailable mailable) throws ShareException {
+
+		try {
+
+			String mailto = "mailto:" + createElementsString(mailable.getTo(), ",");
+
+			String subject = "";
+			if (mailable.getSubject() != null) {
+				subject = mailable.getSubject();
+			}
+			mailto += "?subject=" + subject;
+
+			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
+				mailto += "&cc=" + createElementsString(mailable.getCc(), ",");
+			}
+
+			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
+				mailto += "&bcc=" + createElementsString(mailable.getBcc(), ",");
+			}
+
+			String body = "";
+			if (mailable.getText() != null) {
+				body = mailable.getText();
+			}
+			mailto += "&body=" + body;
+
+			mailto = URLEncoder.encode(mailto, StandardCharsets.UTF_8);
+
+			return URI.create("https://mail.google.com/mail/?extsrc=mailto&url=" + mailto);
 
 		} catch (Exception e) {
 			throw new ShareException("Could not create mailto URI", e);
