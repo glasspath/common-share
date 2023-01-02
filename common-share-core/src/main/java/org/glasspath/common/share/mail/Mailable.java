@@ -128,6 +128,9 @@ public class Mailable {
 	}
 
 	public void addAttachment(String attachment) {
+		if (attachments == null) {
+			attachments = new ArrayList<>();
+		}
 		attachments.add(attachment);
 	}
 

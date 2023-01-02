@@ -133,6 +133,14 @@ public class MailShareUtils {
 
 			}
 
+			if (mailable.getAttachments() != null) {
+
+				for (String attachment : mailable.getAttachments()) {
+					builder.withAttachment(null, new FileDataSource(attachment));
+				}
+
+			}
+
 			return builder.buildEmail();
 
 		} catch (Exception e) {
