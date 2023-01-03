@@ -200,7 +200,48 @@ public class MailUtils {
 			return URI.create("https://mail.google.com/mail/?extsrc=mailto&url=" + mailto);
 
 		} catch (Exception e) {
-			throw new ShareException("Could not create mailto URI", e);
+			throw new ShareException("Could not create gmail mailto URI", e);
+		}
+
+	}
+
+	public static URI createOutlookLiveUri(Mailable mailable) throws ShareException {
+
+		try {
+
+			String arg = "";
+
+			String subject = "";
+			if (mailable.getSubject() != null) {
+				subject = mailable.getSubject();
+			}
+			arg += "?subject=" + subject;
+
+			String body = "";
+			if (mailable.getText() != null) {
+				body = mailable.getText();
+			}
+			arg += "&body=" + body;
+
+			if (mailable.getTo() != null && mailable.getTo().size() > 0) {
+				arg += "&to=" + createElementsString(mailable.getTo(), ",");
+			}
+
+			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
+				arg += "&cc=" + createElementsString(mailable.getCc(), ",");
+			}
+
+			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
+				arg += "&bcc=" + createElementsString(mailable.getBcc(), ",");
+			}
+
+			arg = arg.replace(" ", "%20");
+			arg = arg.replace("\n", "%0D%0A");
+
+			return URI.create("https://outlook.live.com/mail/0/deeplink/compose" + arg);
+
+		} catch (Exception e) {
+			throw new ShareException("Could not create outlook live URI", e);
 		}
 
 	}
