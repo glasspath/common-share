@@ -149,7 +149,7 @@ public class MailShareUtils {
 
 	}
 
-	public static CompletableFuture<Void> sendSimpleEmail(Email email, SmtpAccount account, String password, int timeout) throws ShareException {
+	public static CompletableFuture<Void> sendSimpleEmail(Email email, SmtpAccount account, String password, int timeout, boolean async) throws ShareException {
 
 		if (account != null && account.isValid() && password != null) {
 
@@ -210,7 +210,7 @@ public class MailShareUtils {
 				});
 				*/
 
-				return mailer.sendMail(email);
+				return mailer.sendMail(email, async);
 
 			} catch (Exception e) {
 				throw new ShareException("Could not send simple email (smtp)", e); //$NON-NLS-1$
