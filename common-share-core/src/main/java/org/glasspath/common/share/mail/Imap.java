@@ -39,7 +39,8 @@ public class Imap {
 
 	public static final String[] COMMON_SENT_FOLDER_NAMES = {
 			"Sent",
-			"Sent Items"
+			"Sent Items",
+			"Sent Messages"
 	};
 
 }
