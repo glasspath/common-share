@@ -59,7 +59,7 @@ public class ImapConfiguration {
 	}
 
 	public boolean isValid() {
-		return MailUtils.isValidHost(host) && MailUtils.isValidPort(port) && sentFolderPath != null && sentFolderPath.length() > 0;
+		return MailUtils.isValidHost(host) && MailUtils.isValidPort(port);
 	}
 
 }

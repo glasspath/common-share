@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import org.glasspath.common.Common;
 import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.mail.account.Account;
+import org.glasspath.common.share.mail.account.ImapConfiguration;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.email.EmailPopulatingBuilder;
 import org.simplejavamail.api.mailer.Mailer;
@@ -230,259 +231,159 @@ public class MailShareUtils {
 
 	public static String findImapSentFolderPath(Account account, String password, int timeout) throws ShareException {
 
-		ShareException exception = null;
-		String sentFolderPath = null;
+		// Create a temporary configuration where we can store the String (we need final Object for inline method)
+		ImapConfiguration conf = new ImapConfiguration();
 
-		if (account != null && account.getSmtpConfiguration() != null && account.getImapConfiguration() != null && account.isValid() && password != null) {
+		try {
 
-			Mailer mailer = MailerBuilder
-					.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
-					.withTransportStrategy(TransportStrategy.SMTPS)
-					.withSessionTimeout(timeout)
-					.buildMailer();
+			new ImapStoreOperation(account, password, timeout) {
 
-			Session session = mailer.getSession();
-			if (session != null) {
+				@Override
+				protected void performOperation(Store store) throws ShareException {
 
-				try {
+					try {
 
-					Transport transport = session.getTransport("smtps"); //$NON-NLS-1$
-					if (transport != null) {
+						Folder[] folders = store.getPersonalNamespaces();
+						for (Folder folder : folders) {
 
-						try {
+							String folderName = folder.getName();
 
-							transport.connect();
+							if (folderName != null && folderName.toLowerCase().contains("sent")) { //$NON-NLS-1$
 
-							try {
+								try {
 
-								Store store = session.getStore("imaps"); //$NON-NLS-1$
-								if (store != null) {
+									folder.open(Folder.READ_WRITE);
+									folder.close();
 
-									try {
+									conf.setSentFolderPath(folderName);
 
-										store.connect(account.getImapConfiguration().getHost(), account.getImapConfiguration().getPort(), account.getEmail(), password);
+									break;
 
-										Folder[] folders = store.getPersonalNamespaces();
-										for (Folder folder : folders) {
-
-											String folderName = folder.getName();
-
-											if (folderName != null && folderName.toLowerCase().contains("sent")) { //$NON-NLS-1$
-
-												try {
-
-													folder.open(Folder.READ_WRITE);
-													folder.close();
-
-													sentFolderPath = folderName;
-
-													break;
-
-												} catch (Exception e) {
-													e.printStackTrace();
-												}
-
-											} else {
-
-												try {
-
-													Folder sentFolder = folder.getFolder("Sent"); //$NON-NLS-1$
-													if (sentFolder != null) {
-
-														sentFolder.open(Folder.READ_WRITE);
-														sentFolder.close();
-
-														sentFolderPath = folderName + "/Sent"; //$NON-NLS-1$
-
-														break;
-
-													}
-
-												} catch (Exception e) {
-													e.printStackTrace();
-												}
-
-												try {
-
-													Folder sentFolder = folder.getFolder("Sent Items"); //$NON-NLS-1$
-													if (sentFolder != null) {
-
-														sentFolder.open(Folder.READ_WRITE);
-														sentFolder.close();
-
-														sentFolderPath = folderName + "/Sent Items"; //$NON-NLS-1$
-
-														break;
-
-													}
-
-												} catch (Exception e) {
-													e.printStackTrace();
-												}
-
-											}
-
-										}
-
-										store.close();
-
-									} catch (Exception e) {
-										exception = new ShareException("Could not access store", e); //$NON-NLS-1$
-									}
-
-								} else {
-									exception = new ShareException("store is null"); //$NON-NLS-1$
+								} catch (Exception e) {
+									e.printStackTrace();
 								}
 
-							} catch (Exception e) {
-								exception = new ShareException("Could not get store", e); //$NON-NLS-1$
+							} else {
+
+								try {
+
+									Folder sentFolder = folder.getFolder("Sent"); //$NON-NLS-1$
+									if (sentFolder != null) {
+
+										sentFolder.open(Folder.READ_WRITE);
+										sentFolder.close();
+
+										conf.setSentFolderPath(folderName + "/Sent"); //$NON-NLS-1$
+
+										break;
+
+									}
+
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+
+								try {
+
+									Folder sentFolder = folder.getFolder("Sent Items"); //$NON-NLS-1$
+									if (sentFolder != null) {
+
+										sentFolder.open(Folder.READ_WRITE);
+										sentFolder.close();
+
+										conf.setSentFolderPath(folderName + "/Sent Items"); //$NON-NLS-1$
+
+										break;
+
+									}
+
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+
 							}
 
-							transport.close();
-
-						} catch (Exception e) {
-							exception = new ShareException("Could not connect transport", e); //$NON-NLS-1$
 						}
 
-					} else {
-						exception = new ShareException("transport is null"); //$NON-NLS-1$
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 
-				} catch (Exception e) {
-					exception = new ShareException("Could not get transport", e); //$NON-NLS-1$
 				}
+			};
 
-			} else {
-				exception = new ShareException("session is null"); //$NON-NLS-1$
-			}
-
-		} else {
-			exception = new ShareException("Invalid arguments passed"); //$NON-NLS-1$
+		} catch (Exception e) {
+			throw new ShareException("Could not find imap sent folder path", e); //$NON-NLS-1$
 		}
 
-		if (exception != null) {
-			throw exception;
-		}
-
-		return sentFolderPath;
+		return conf.getSentFolderPath();
 
 	}
 
 	public static void saveSimpleEmailToImapFolder(Email email, Account account, String password, int timeout) throws ShareException {
 
-		ShareException exception = null;
+		if (email != null && account != null && account.getImapConfiguration() != null && account.getImapConfiguration().getSentFolderPath() != null && account.getImapConfiguration().getSentFolderPath().length() > 0) {
 
-		if (email != null && account != null && account.getSmtpConfiguration() != null && account.getImapConfiguration() != null && account.isValid() && password != null) {
+			try {
 
-			Mailer mailer = MailerBuilder
-					.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
-					.withTransportStrategy(TransportStrategy.SMTPS)
-					.withSessionTimeout(timeout)
-					.buildMailer();
+				new ImapStoreOperation(account, password, timeout) {
 
-			Session session = mailer.getSession();
-			if (session != null) {
+					@Override
+					protected void performOperation(Store store) throws ShareException {
 
-				try {
-
-					Transport transport = session.getTransport("smtps"); //$NON-NLS-1$
-					if (transport != null) {
-
-						try {
-
-							transport.connect();
+						String[] folderNames = account.getImapConfiguration().getSentFolderPath().split("/");
+						if (folderNames.length > 0) {
 
 							try {
 
-								Store store = session.getStore("imaps"); //$NON-NLS-1$
-								if (store != null) {
+								Folder folder = store.getFolder(folderNames[0]);
+
+								for (int i = 1; i < folderNames.length; i++) {
+									if (folder != null) {
+										// TODO: Should we call close?
+										folder = folder.getFolder(folderNames[i]);
+									}
+								}
+
+								if (folder != null) {
 
 									try {
 
-										store.connect(account.getImapConfiguration().getHost(), account.getImapConfiguration().getPort(), account.getEmail(), password);
+										folder.open(Folder.READ_WRITE);
 
-										String[] folderNames = account.getImapConfiguration().getSentFolderPath().split("/");
-										if (folderNames.length > 0) {
+										MimeMessage message = EmailConverter.emailToMimeMessage(email);
+										message.setFlag(Flags.Flag.SEEN, true);
 
-											try {
+										Message[] messages = new Message[1];
+										messages[0] = message;
 
-												Folder folder = store.getFolder(folderNames[0]);
+										folder.appendMessages(messages);
 
-												for (int i = 1; i < folderNames.length; i++) {
-													if (folder != null) {
-														// TODO: Should we call close?
-														folder = folder.getFolder(folderNames[i]);
-													}
-												}
-
-												if (folder != null) {
-
-													try {
-
-														folder.open(Folder.READ_WRITE);
-
-														MimeMessage message = EmailConverter.emailToMimeMessage(email);
-														message.setFlag(Flags.Flag.SEEN, true);
-
-														Message[] messages = new Message[1];
-														messages[0] = message;
-
-														folder.appendMessages(messages);
-
-														folder.close();
-
-													} catch (Exception e) {
-														exception = new ShareException("Could not append message to folder", e); //$NON-NLS-1$
-													}
-
-												} else {
-													exception = new ShareException("folder is null"); //$NON-NLS-1$
-												}
-
-											} catch (Exception e) {
-												exception = new ShareException("Could not get folder", e); //$NON-NLS-1$
-											}
-
-										}
-
-										store.close();
+										folder.close();
 
 									} catch (Exception e) {
-										exception = new ShareException("Could not access store", e); //$NON-NLS-1$
+										throw new ShareException("Could not append message to folder", e); //$NON-NLS-1$
 									}
 
 								} else {
-									exception = new ShareException("store is null"); //$NON-NLS-1$
+									throw new ShareException("folder is null"); //$NON-NLS-1$
 								}
 
 							} catch (Exception e) {
-								exception = new ShareException("Could not get store", e); //$NON-NLS-1$
+								throw new ShareException("Could not get folder", e); //$NON-NLS-1$
 							}
 
-							transport.close();
-
-						} catch (Exception e) {
-							exception = new ShareException("Could not connect transport", e); //$NON-NLS-1$
 						}
 
-					} else {
-						exception = new ShareException("transport is null"); //$NON-NLS-1$
 					}
+				};
 
-				} catch (Exception e) {
-					exception = new ShareException("Could not get transport", e); //$NON-NLS-1$
-				}
-
-			} else {
-				exception = new ShareException("session is null"); //$NON-NLS-1$
+			} catch (Exception e) {
+				throw new ShareException("Could not save email to imap folder", e); //$NON-NLS-1$
 			}
 
 		} else {
-			exception = new ShareException("Invalid arguments passed"); //$NON-NLS-1$
-		}
-
-		if (exception != null) {
-			throw exception;
+			throw new ShareException("Invalid arguments passed"); //$NON-NLS-1$
 		}
 
 	}
