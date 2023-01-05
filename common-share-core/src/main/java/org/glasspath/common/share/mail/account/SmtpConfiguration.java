@@ -24,63 +24,33 @@ package org.glasspath.common.share.mail.account;
 
 import org.glasspath.common.share.mail.MailUtils;
 
-public class Account {
+public class SmtpConfiguration {
 
-	private String name = null;
-	private String email = null;
-	private SmtpConfiguration smtpConfiguration = null;
-	private ImapConfiguration imapConfiguration = null;
+	private String host = null;
+	private int port = 0;
 
-	public Account() {
+	public SmtpConfiguration() {
 
 	}
 
-	public String getName() {
-		return name;
+	public String getHost() {
+		return host;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setHost(String host) {
+		this.host = host;
 	}
 
-	public String getEmail() {
-		return email;
+	public int getPort() {
+		return port;
 	}
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public SmtpConfiguration getSmtpConfiguration() {
-		return smtpConfiguration;
-	}
-
-	public void setSmtpConfiguration(SmtpConfiguration smtpConfiguration) {
-		this.smtpConfiguration = smtpConfiguration;
-	}
-
-	public ImapConfiguration getImapConfiguration() {
-		return imapConfiguration;
-	}
-
-	public void setImapConfiguration(ImapConfiguration imapConfiguration) {
-		this.imapConfiguration = imapConfiguration;
+	public void setPort(int port) {
+		this.port = port;
 	}
 
 	public boolean isValid() {
-
-		boolean valid = MailUtils.isValidEmailAddress(email);
-
-		if (smtpConfiguration != null && !smtpConfiguration.isValid()) {
-			valid = false;
-		}
-
-		if (imapConfiguration != null && !imapConfiguration.isValid()) {
-			valid = false;
-		}
-
-		return valid;
-
+		return MailUtils.isValidHost(host) && MailUtils.isValidPort(port);
 	}
 
 }

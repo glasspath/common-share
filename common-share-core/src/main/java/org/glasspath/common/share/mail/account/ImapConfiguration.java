@@ -24,12 +24,13 @@ package org.glasspath.common.share.mail.account;
 
 import org.glasspath.common.share.mail.MailUtils;
 
-public class SmtpAccount extends Account {
+public class ImapConfiguration {
 
 	private String host = null;
 	private int port = 0;
+	private String sentFolderPath = null;
 
-	public SmtpAccount() {
+	public ImapConfiguration() {
 
 	}
 
@@ -49,9 +50,16 @@ public class SmtpAccount extends Account {
 		this.port = port;
 	}
 
-	@Override
+	public String getSentFolderPath() {
+		return sentFolderPath;
+	}
+
+	public void setSentFolderPath(String sentFolderPath) {
+		this.sentFolderPath = sentFolderPath;
+	}
+
 	public boolean isValid() {
-		return super.isValid() && MailUtils.isValidHost(host) && MailUtils.isValidPort(port);
+		return MailUtils.isValidHost(host) && MailUtils.isValidPort(port) && sentFolderPath != null && sentFolderPath.length() > 0;
 	}
 
 }

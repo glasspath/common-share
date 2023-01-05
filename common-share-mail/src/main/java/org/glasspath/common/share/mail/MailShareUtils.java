@@ -30,7 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import org.glasspath.common.Common;
 import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.mail.account.Account;
-import org.glasspath.common.share.mail.account.SmtpAccount;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.email.EmailPopulatingBuilder;
 import org.simplejavamail.api.mailer.Mailer;
@@ -40,6 +39,13 @@ import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.MailerBuilder;
 
 import jakarta.activation.FileDataSource;
+import jakarta.mail.Flags;
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.Session;
+import jakarta.mail.Store;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.MimeMessage;
 
 public class MailShareUtils {
 
@@ -47,19 +53,19 @@ public class MailShareUtils {
 
 	}
 
-	public static void testAccount(SmtpAccount account, String password, int timeout) throws ShareException {
+	public static void testSmtpConfiguration(Account account, String password, int timeout) throws ShareException {
 
-		if (account != null && account.isValid() && password != null) {
+		if (account != null && account.getSmtpConfiguration() != null && account.isValid() && password != null) {
 
 			try {
 
 				Mailer mailer = MailerBuilder
-						.withSMTPServer(account.getHost(), account.getPort(), account.getEmail(), password)
+						.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
 						.withTransportStrategy(TransportStrategy.SMTPS)
 						.withSessionTimeout(timeout)
 						.buildMailer();
 
-				Common.LOGGER.info("Testing connection, host: " + account.getHost() + ", port: " + account.getPort()); //$NON-NLS-1$ //$NON-NLS-2$
+				Common.LOGGER.info("Testing connection, host: " + account.getSmtpConfiguration().getHost() + ", port: " + account.getSmtpConfiguration().getPort()); //$NON-NLS-1$ //$NON-NLS-2$
 				mailer.testConnection();
 				Common.LOGGER.info("Testing connection finished"); //$NON-NLS-1$
 
@@ -149,12 +155,12 @@ public class MailShareUtils {
 
 	}
 
-	public static CompletableFuture<Void> sendSimpleEmail(Email email, SmtpAccount account, String password, int timeout, boolean async) throws ShareException {
+	public static CompletableFuture<Void> sendSimpleEmail(Email email, Account account, String password, int timeout, boolean async) throws ShareException {
 
-		if (account != null && account.isValid() && password != null) {
+		if (account != null && account.getSmtpConfiguration() != null && account.isValid() && password != null) {
 
 			Mailer mailer = MailerBuilder
-					.withSMTPServer(account.getHost(), account.getPort(), account.getEmail(), password)
+					.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
 					.withTransportStrategy(TransportStrategy.SMTPS)
 					.withSessionTimeout(timeout)
 					.buildMailer();
@@ -216,9 +222,268 @@ public class MailShareUtils {
 				throw new ShareException("Could not send simple email (smtp)", e); //$NON-NLS-1$
 			}
 
+		} else {
+			throw new ShareException("Could not send simple email (smtp), invalid arguments"); //$NON-NLS-1$
 		}
 
-		return null;
+	}
+
+	public static String findImapSentFolderPath(Account account, String password, int timeout) throws ShareException {
+
+		ShareException exception = null;
+		String sentFolderPath = null;
+
+		if (account != null && account.getSmtpConfiguration() != null && account.getImapConfiguration() != null && account.isValid() && password != null) {
+
+			Mailer mailer = MailerBuilder
+					.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
+					.withTransportStrategy(TransportStrategy.SMTPS)
+					.withSessionTimeout(timeout)
+					.buildMailer();
+
+			Session session = mailer.getSession();
+			if (session != null) {
+
+				try {
+
+					Transport transport = session.getTransport("smtps"); //$NON-NLS-1$
+					if (transport != null) {
+
+						try {
+
+							transport.connect();
+
+							try {
+
+								Store store = session.getStore("imaps"); //$NON-NLS-1$
+								if (store != null) {
+
+									try {
+
+										store.connect(account.getImapConfiguration().getHost(), account.getImapConfiguration().getPort(), account.getEmail(), password);
+
+										Folder[] folders = store.getPersonalNamespaces();
+										for (Folder folder : folders) {
+
+											String folderName = folder.getName();
+
+											if (folderName != null && folderName.toLowerCase().contains("sent")) { //$NON-NLS-1$
+
+												try {
+
+													folder.open(Folder.READ_WRITE);
+													folder.close();
+
+													sentFolderPath = folderName;
+
+													break;
+
+												} catch (Exception e) {
+													e.printStackTrace();
+												}
+
+											} else {
+
+												try {
+
+													Folder sentFolder = folder.getFolder("Sent"); //$NON-NLS-1$
+													if (sentFolder != null) {
+
+														sentFolder.open(Folder.READ_WRITE);
+														sentFolder.close();
+
+														sentFolderPath = folderName + "/Sent"; //$NON-NLS-1$
+
+														break;
+
+													}
+
+												} catch (Exception e) {
+													e.printStackTrace();
+												}
+
+												try {
+
+													Folder sentFolder = folder.getFolder("Sent Items"); //$NON-NLS-1$
+													if (sentFolder != null) {
+
+														sentFolder.open(Folder.READ_WRITE);
+														sentFolder.close();
+
+														sentFolderPath = folderName + "/Sent Items"; //$NON-NLS-1$
+
+														break;
+
+													}
+
+												} catch (Exception e) {
+													e.printStackTrace();
+												}
+
+											}
+
+										}
+
+										store.close();
+
+									} catch (Exception e) {
+										exception = new ShareException("Could not access store", e); //$NON-NLS-1$
+									}
+
+								} else {
+									exception = new ShareException("store is null"); //$NON-NLS-1$
+								}
+
+							} catch (Exception e) {
+								exception = new ShareException("Could not get store", e); //$NON-NLS-1$
+							}
+
+							transport.close();
+
+						} catch (Exception e) {
+							exception = new ShareException("Could not connect transport", e); //$NON-NLS-1$
+						}
+
+					} else {
+						exception = new ShareException("transport is null"); //$NON-NLS-1$
+					}
+
+				} catch (Exception e) {
+					exception = new ShareException("Could not get transport", e); //$NON-NLS-1$
+				}
+
+			} else {
+				exception = new ShareException("session is null"); //$NON-NLS-1$
+			}
+
+		} else {
+			exception = new ShareException("Invalid arguments passed"); //$NON-NLS-1$
+		}
+
+		if (exception != null) {
+			throw exception;
+		}
+
+		return sentFolderPath;
+
+	}
+
+	public static void saveSimpleEmailToImapFolder(Email email, Account account, String password, int timeout) throws ShareException {
+
+		ShareException exception = null;
+
+		if (email != null && account != null && account.getSmtpConfiguration() != null && account.getImapConfiguration() != null && account.isValid() && password != null) {
+
+			Mailer mailer = MailerBuilder
+					.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
+					.withTransportStrategy(TransportStrategy.SMTPS)
+					.withSessionTimeout(timeout)
+					.buildMailer();
+
+			Session session = mailer.getSession();
+			if (session != null) {
+
+				try {
+
+					Transport transport = session.getTransport("smtps"); //$NON-NLS-1$
+					if (transport != null) {
+
+						try {
+
+							transport.connect();
+
+							try {
+
+								Store store = session.getStore("imaps"); //$NON-NLS-1$
+								if (store != null) {
+
+									try {
+
+										store.connect(account.getImapConfiguration().getHost(), account.getImapConfiguration().getPort(), account.getEmail(), password);
+
+										String[] folderNames = account.getImapConfiguration().getSentFolderPath().split("/");
+										if (folderNames.length > 0) {
+
+											try {
+
+												Folder folder = store.getFolder(folderNames[0]);
+
+												for (int i = 1; i < folderNames.length; i++) {
+													if (folder != null) {
+														// TODO: Should we call close?
+														folder = folder.getFolder(folderNames[i]);
+													}
+												}
+
+												if (folder != null) {
+
+													try {
+
+														folder.open(Folder.READ_WRITE);
+
+														MimeMessage message = EmailConverter.emailToMimeMessage(email);
+														message.setFlag(Flags.Flag.SEEN, true);
+
+														Message[] messages = new Message[1];
+														messages[0] = message;
+
+														folder.appendMessages(messages);
+
+														folder.close();
+
+													} catch (Exception e) {
+														exception = new ShareException("Could not append message to folder", e); //$NON-NLS-1$
+													}
+
+												} else {
+													exception = new ShareException("folder is null"); //$NON-NLS-1$
+												}
+
+											} catch (Exception e) {
+												exception = new ShareException("Could not get folder", e); //$NON-NLS-1$
+											}
+
+										}
+
+										store.close();
+
+									} catch (Exception e) {
+										exception = new ShareException("Could not access store", e); //$NON-NLS-1$
+									}
+
+								} else {
+									exception = new ShareException("store is null"); //$NON-NLS-1$
+								}
+
+							} catch (Exception e) {
+								exception = new ShareException("Could not get store", e); //$NON-NLS-1$
+							}
+
+							transport.close();
+
+						} catch (Exception e) {
+							exception = new ShareException("Could not connect transport", e); //$NON-NLS-1$
+						}
+
+					} else {
+						exception = new ShareException("transport is null"); //$NON-NLS-1$
+					}
+
+				} catch (Exception e) {
+					exception = new ShareException("Could not get transport", e); //$NON-NLS-1$
+				}
+
+			} else {
+				exception = new ShareException("session is null"); //$NON-NLS-1$
+			}
+
+		} else {
+			exception = new ShareException("Invalid arguments passed"); //$NON-NLS-1$
+		}
+
+		if (exception != null) {
+			throw exception;
+		}
 
 	}
 
