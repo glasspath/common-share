@@ -244,7 +244,7 @@ public class MailShareUtils {
 					try {
 
 						Folder[] folders = store.getPersonalNamespaces();
-						for (Folder folder : folders) {
+						outerLoop: for (Folder folder : folders) {
 
 							String folderName = folder.getName();
 
@@ -257,48 +257,34 @@ public class MailShareUtils {
 
 									conf.setSentFolderPath(folderName);
 
-									break;
+									break outerLoop;
 
 								} catch (Exception e) {
-									e.printStackTrace();
+									Common.LOGGER.warn("Exception while finding imap sent folder path", e); //$NON-NLS-1$
 								}
 
 							} else {
 
-								try {
+								for (String sentFolderName : Imap.COMMON_SENT_FOLDER_NAMES) {
 
-									Folder sentFolder = folder.getFolder("Sent"); //$NON-NLS-1$
-									if (sentFolder != null) {
+									try {
 
-										sentFolder.open(Folder.READ_WRITE);
-										sentFolder.close();
+										Folder sentFolder = folder.getFolder(sentFolderName);
+										if (sentFolder != null) {
 
-										conf.setSentFolderPath(folderName + "/Sent"); //$NON-NLS-1$
+											sentFolder.open(Folder.READ_WRITE);
+											sentFolder.close();
 
-										break;
+											conf.setSentFolderPath(folderName + "/" + sentFolderName); //$NON-NLS-1$
 
+											break outerLoop;
+
+										}
+
+									} catch (Exception e) {
+										Common.LOGGER.warn("Exception while finding imap sent folder path", e); //$NON-NLS-1$
 									}
 
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-
-								try {
-
-									Folder sentFolder = folder.getFolder("Sent Items"); //$NON-NLS-1$
-									if (sentFolder != null) {
-
-										sentFolder.open(Folder.READ_WRITE);
-										sentFolder.close();
-
-										conf.setSentFolderPath(folderName + "/Sent Items"); //$NON-NLS-1$
-
-										break;
-
-									}
-
-								} catch (Exception e) {
-									e.printStackTrace();
 								}
 
 							}
@@ -306,7 +292,7 @@ public class MailShareUtils {
 						}
 
 					} catch (Exception e) {
-						e.printStackTrace();
+						throw new ShareException("Exception while finding imap sent folder path", e); //$NON-NLS-1$
 					}
 
 				}
@@ -331,7 +317,7 @@ public class MailShareUtils {
 					@Override
 					protected void performOperation(Store store) throws ShareException {
 
-						String[] folderNames = account.getImapConfiguration().getSentFolderPath().split("/");
+						String[] folderNames = account.getImapConfiguration().getSentFolderPath().split("/"); //$NON-NLS-1$
 						if (folderNames.length > 0) {
 
 							try {
