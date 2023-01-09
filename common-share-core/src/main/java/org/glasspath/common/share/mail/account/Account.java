@@ -35,6 +35,21 @@ public class Account {
 
 	}
 
+	public Account(Account account) {
+
+		name = account.name;
+		email = account.email;
+
+		if (account.smtpConfiguration != null) {
+			smtpConfiguration = new SmtpConfiguration(account.smtpConfiguration);
+		}
+
+		if (account.imapConfiguration != null) {
+			imapConfiguration = new ImapConfiguration(account.imapConfiguration);
+		}
+
+	}
+
 	public String getName() {
 		return name;
 	}

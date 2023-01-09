@@ -25,6 +25,26 @@ package org.glasspath.common.share.mail;
 @SuppressWarnings("nls")
 public class Imap {
 
+	public static enum Protocol {
+
+		IMAP("IMAP", "imap"),
+		IMAPS("IMAPS", "imaps");
+
+		public final String name;
+		public final String key;
+
+		private Protocol(String name, String key) {
+			this.name = name;
+			this.key = key;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+
+	}
+
 	public static final String[] COMMON_URLS = {
 			"imap.",
 			"mail.",

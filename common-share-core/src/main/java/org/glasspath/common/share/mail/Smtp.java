@@ -25,6 +25,28 @@ package org.glasspath.common.share.mail;
 @SuppressWarnings("nls")
 public class Smtp {
 
+	public static enum Protocol {
+
+		SMTP("SMTP", "smtp"),
+		SMTP_OAUTH2("SMTP OAUTH2", "smtp"),
+		SMTP_TLS("SMTP TLS", "smtp"),
+		SMTPS("SMTPS", "smtps");
+
+		public final String name;
+		public final String key;
+
+		private Protocol(String name, String key) {
+			this.name = name;
+			this.key = key;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+
+	}
+
 	public static final String[] COMMON_URLS = {
 			"smtp.",
 			"mail.",

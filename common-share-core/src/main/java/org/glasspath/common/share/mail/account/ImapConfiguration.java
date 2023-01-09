@@ -22,16 +22,25 @@
  */
 package org.glasspath.common.share.mail.account;
 
+import org.glasspath.common.share.mail.Imap.Protocol;
 import org.glasspath.common.share.mail.MailUtils;
 
 public class ImapConfiguration {
 
 	private String host = null;
 	private int port = 0;
+	private Protocol protocol = Protocol.IMAPS;
 	private String sentFolderPath = null;
 
 	public ImapConfiguration() {
 
+	}
+
+	public ImapConfiguration(ImapConfiguration imapConfiguration) {
+		host = imapConfiguration.host;
+		port = imapConfiguration.port;
+		protocol = imapConfiguration.protocol;
+		sentFolderPath = imapConfiguration.sentFolderPath;
 	}
 
 	public String getHost() {
@@ -48,6 +57,14 @@ public class ImapConfiguration {
 
 	public void setPort(int port) {
 		this.port = port;
+	}
+
+	public Protocol getProtocol() {
+		return protocol;
+	}
+
+	public void setProtocol(Protocol protocol) {
+		this.protocol = protocol;
 	}
 
 	public String getSentFolderPath() {
