@@ -47,6 +47,8 @@ public class Smtp {
 
 	}
 
+	public static final Protocol DEFAULT_PROTOCOL = Protocol.SMTPS;
+
 	public static final String[] COMMON_URLS = {
 			"smtp.",
 			"mail.",
@@ -61,5 +63,7 @@ public class Smtp {
 			2525,
 			25
 	};
+
+	public static final int DEFAULT_PORT = 465;
 
 }

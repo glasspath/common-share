@@ -45,6 +45,8 @@ public class Imap {
 
 	}
 
+	public static final Protocol DEFAULT_PROTOCOL = Protocol.IMAPS;
+
 	public static final String[] COMMON_URLS = {
 			"imap.",
 			"mail.",
@@ -56,6 +58,8 @@ public class Imap {
 			993,
 			143
 	};
+
+	public static final int DEFAULT_PORT = 993;
 
 	public static final String[] COMMON_SENT_FOLDER_NAMES = {
 			"Sent",
