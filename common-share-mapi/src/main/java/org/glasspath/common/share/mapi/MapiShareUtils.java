@@ -65,68 +65,72 @@ public class MapiShareUtils {
 					recipientCount += mailable.getBcc().size();
 				}
 
-				MapiRecipDescW[] recipients = (MapiRecipDescW[]) new MapiRecipDescW().toArray(recipientCount);
+				if (recipientCount > 0) {
 
-				int i = 0;
+					MapiRecipDescW[] recipients = (MapiRecipDescW[]) new MapiRecipDescW().toArray(recipientCount);
 
-				if (mailable.getFrom() != null) {
+					int i = 0;
 
-					recipients[i].ulRecipClass = MapiRecipDescW.MAPI_ORIG;
-					recipients[i].lpszName = new WString(mailable.getFrom());
-					recipients[i].lpszAddress = new WString("SMTP:" + mailable.getFrom());
-					recipients[i].write();
+					if (mailable.getFrom() != null) {
 
-					i++;
-
-				}
-
-				if (mailable.getTo() != null) {
-
-					for (String to : mailable.getTo()) {
-
-						recipients[i].ulRecipClass = MapiRecipDescW.MAPI_TO;
-						recipients[i].lpszName = new WString(to);
-						recipients[i].lpszAddress = new WString("SMTP:" + to);
+						recipients[i].ulRecipClass = MapiRecipDescW.MAPI_ORIG;
+						recipients[i].lpszName = new WString(mailable.getFrom());
+						recipients[i].lpszAddress = new WString("SMTP:" + mailable.getFrom());
 						recipients[i].write();
 
 						i++;
 
 					}
 
-				}
+					if (mailable.getTo() != null) {
 
-				if (mailable.getCc() != null) {
+						for (String to : mailable.getTo()) {
 
-					for (String cc : mailable.getCc()) {
+							recipients[i].ulRecipClass = MapiRecipDescW.MAPI_TO;
+							recipients[i].lpszName = new WString(to);
+							recipients[i].lpszAddress = new WString("SMTP:" + to);
+							recipients[i].write();
 
-						recipients[i].ulRecipClass = MapiRecipDescW.MAPI_CC;
-						recipients[i].lpszName = new WString(cc);
-						recipients[i].lpszAddress = new WString("SMTP:" + cc);
-						recipients[i].write();
+							i++;
 
-						i++;
-
-					}
-
-				}
-
-				if (mailable.getBcc() != null) {
-
-					for (String bcc : mailable.getBcc()) {
-
-						recipients[i].ulRecipClass = MapiRecipDescW.MAPI_BCC;
-						recipients[i].lpszName = new WString(bcc);
-						recipients[i].lpszAddress = new WString("SMTP:" + bcc);
-						recipients[i].write();
-
-						i++;
+						}
 
 					}
 
-				}
+					if (mailable.getCc() != null) {
 
-				message.receips = recipients[0].getPointer();
-				message.receipCount = recipientCount;
+						for (String cc : mailable.getCc()) {
+
+							recipients[i].ulRecipClass = MapiRecipDescW.MAPI_CC;
+							recipients[i].lpszName = new WString(cc);
+							recipients[i].lpszAddress = new WString("SMTP:" + cc);
+							recipients[i].write();
+
+							i++;
+
+						}
+
+					}
+
+					if (mailable.getBcc() != null) {
+
+						for (String bcc : mailable.getBcc()) {
+
+							recipients[i].ulRecipClass = MapiRecipDescW.MAPI_BCC;
+							recipients[i].lpszName = new WString(bcc);
+							recipients[i].lpszAddress = new WString("SMTP:" + bcc);
+							recipients[i].write();
+
+							i++;
+
+						}
+
+					}
+
+					message.receips = recipients[0].getPointer();
+					message.receipCount = recipientCount;
+
+				}
 
 				if (mailable.getSubject() != null) {
 					message.subject = new WString(mailable.getSubject());
@@ -161,7 +165,7 @@ public class MapiShareUtils {
 
 						MapiFileDescW[] files = (MapiFileDescW[]) new MapiFileDescW().toArray(attachments.size());
 
-						i = 0;
+						int i = 0;
 
 						for (Entry<String, String> entry : mailable.getImages().entrySet()) {
 
@@ -188,6 +192,8 @@ public class MapiShareUtils {
 					throw new ShareException("MAPISendMailW returned error: " + result);
 				}
 
+			} catch (ShareException e) {
+				throw e;
 			} catch (UnsatisfiedLinkError e) {
 				throw new ShareException("Could not create email via Mapi", e);
 			} catch (Exception e) {
