@@ -23,13 +23,14 @@
 package org.glasspath.common.share.mail.account;
 
 import org.glasspath.common.share.mail.MailUtils;
+import org.glasspath.common.share.mail.Smtp;
 import org.glasspath.common.share.mail.Smtp.Protocol;
 
 public class SmtpConfiguration {
 
 	private String host = null;
 	private int port = 0;
-	private Protocol protocol = Protocol.SMTPS;
+	private Protocol protocol = Smtp.DEFAULT_PROTOCOL;
 
 	public SmtpConfiguration() {
 
@@ -66,7 +67,7 @@ public class SmtpConfiguration {
 	}
 
 	public boolean isValid() {
-		return MailUtils.isValidHost(host) && MailUtils.isValidPort(port);
+		return MailUtils.isValidHost(host) && MailUtils.isValidPort(port) && protocol != null;
 	}
 
 }

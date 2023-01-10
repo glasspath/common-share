@@ -22,6 +22,7 @@
  */
 package org.glasspath.common.share.mail.account;
 
+import org.glasspath.common.share.mail.Imap;
 import org.glasspath.common.share.mail.Imap.Protocol;
 import org.glasspath.common.share.mail.MailUtils;
 
@@ -29,7 +30,7 @@ public class ImapConfiguration {
 
 	private String host = null;
 	private int port = 0;
-	private Protocol protocol = Protocol.IMAPS;
+	private Protocol protocol = Imap.DEFAULT_PROTOCOL;
 	private String sentFolderPath = null;
 
 	public ImapConfiguration() {
@@ -76,7 +77,7 @@ public class ImapConfiguration {
 	}
 
 	public boolean isValid() {
-		return MailUtils.isValidHost(host) && MailUtils.isValidPort(port);
+		return MailUtils.isValidHost(host) && MailUtils.isValidPort(port) && protocol != null;
 	}
 
 }

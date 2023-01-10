@@ -25,7 +25,6 @@ package org.glasspath.common.share.mail;
 import org.glasspath.common.share.ShareException;
 import org.glasspath.common.share.mail.account.Account;
 import org.simplejavamail.api.mailer.Mailer;
-import org.simplejavamail.api.mailer.config.TransportStrategy;
 import org.simplejavamail.mailer.MailerBuilder;
 
 import jakarta.mail.Session;
@@ -42,7 +41,7 @@ public abstract class ImapStoreOperation {
 
 			Mailer mailer = MailerBuilder
 					.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
-					.withTransportStrategy(TransportStrategy.SMTPS)
+					.withTransportStrategy(MailShareUtils.getTransportStrategy(account.getSmtpConfiguration().getProtocol()))
 					.withSessionTimeout(timeout)
 					.buildMailer();
 
@@ -51,7 +50,7 @@ public abstract class ImapStoreOperation {
 
 				try {
 
-					Transport transport = session.getTransport("smtps"); //$NON-NLS-1$
+					Transport transport = session.getTransport(account.getSmtpConfiguration().getProtocol().key);
 					if (transport != null) {
 
 						try {
@@ -60,7 +59,7 @@ public abstract class ImapStoreOperation {
 
 							try {
 
-								Store store = session.getStore("imaps"); //$NON-NLS-1$
+								Store store = session.getStore(account.getImapConfiguration().getProtocol().key);
 								if (store != null) {
 
 									try {

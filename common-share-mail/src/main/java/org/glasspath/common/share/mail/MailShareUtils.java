@@ -43,14 +43,39 @@ import jakarta.activation.FileDataSource;
 import jakarta.mail.Flags;
 import jakarta.mail.Folder;
 import jakarta.mail.Message;
-import jakarta.mail.Session;
 import jakarta.mail.Store;
-import jakarta.mail.Transport;
 import jakarta.mail.internet.MimeMessage;
 
 public class MailShareUtils {
 
 	private MailShareUtils() {
+
+	}
+
+	public static TransportStrategy getTransportStrategy(Smtp.Protocol protocol) {
+
+		if (protocol == null) {
+			protocol = Smtp.DEFAULT_PROTOCOL;
+		}
+
+		switch (protocol) {
+
+		case SMTP:
+			return TransportStrategy.SMTP;
+
+		case SMTP_OAUTH2:
+			return TransportStrategy.SMTP_OAUTH2;
+
+		case SMTP_TLS:
+			return TransportStrategy.SMTP_TLS;
+
+		case SMTPS:
+			return TransportStrategy.SMTPS;
+
+		default:
+			return TransportStrategy.SMTPS;
+
+		}
 
 	}
 
@@ -62,7 +87,7 @@ public class MailShareUtils {
 
 				Mailer mailer = MailerBuilder
 						.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
-						.withTransportStrategy(TransportStrategy.SMTPS)
+						.withTransportStrategy(getTransportStrategy(account.getSmtpConfiguration().getProtocol()))
 						.withSessionTimeout(timeout)
 						.buildMailer();
 
@@ -71,11 +96,11 @@ public class MailShareUtils {
 				Common.LOGGER.info("Testing connection finished"); //$NON-NLS-1$
 
 			} catch (Exception e) {
-				throw new ShareException("Testing of account failed", e);
+				throw new ShareException("Testing of account failed", e); //$NON-NLS-1$
 			}
 
 		} else {
-			throw new ShareException("Illegal argument passed for testing account");
+			throw new ShareException("Illegal argument passed for testing account"); //$NON-NLS-1$
 		}
 
 	}
@@ -162,7 +187,7 @@ public class MailShareUtils {
 
 			Mailer mailer = MailerBuilder
 					.withSMTPServer(account.getSmtpConfiguration().getHost(), account.getSmtpConfiguration().getPort(), account.getEmail(), password)
-					.withTransportStrategy(TransportStrategy.SMTPS)
+					.withTransportStrategy(getTransportStrategy(account.getSmtpConfiguration().getProtocol()))
 					.withSessionTimeout(timeout)
 					.buildMailer();
 
