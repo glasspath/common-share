@@ -22,14 +22,10 @@
  */
 package org.glasspath.common.share.mail;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.http.client.utils.URIBuilder;
-import org.glasspath.common.share.ShareException;
 
 public class MailUtils {
 
@@ -127,128 +123,6 @@ public class MailUtils {
 		}
 
 		return s;
-
-	}
-
-	public static URI createMailtoUri(Mailable mailable) throws ShareException {
-
-		try {
-
-			String mailto = "mailto:" + createElementsString(mailable.getTo(), ",");
-
-			String subject = "";
-			if (mailable.getSubject() != null) {
-				subject = mailable.getSubject();
-			}
-			mailto += "?subject=" + subject;
-
-			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
-				mailto += "&cc=" + createElementsString(mailable.getCc(), ",");
-			}
-
-			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
-				mailto += "&bcc=" + createElementsString(mailable.getBcc(), ",");
-			}
-
-			String body = "";
-			if (mailable.getText() != null) {
-				body = mailable.getText();
-			}
-			mailto += "&body=" + body;
-
-			// TODO
-			mailto = mailto.replace(" ", "%20");
-			mailto = mailto.replace("\n", "%0D%0A");
-
-			// TODO
-			return URI.create(mailto);
-
-		} catch (Exception e) {
-			throw new ShareException("Could not create mailto URI", e);
-		}
-
-	}
-
-	public static URI createGmailComposeUri(Mailable mailable) throws ShareException {
-
-		try {
-
-			URIBuilder builder = new URIBuilder();
-			builder.setScheme("https");
-			builder.setHost("mail.google.com");
-			builder.setPath("/mail");
-			builder.setParameter("view", "cm");
-
-			if (mailable.getTo() != null && mailable.getTo().size() > 0) {
-				builder.setParameter("to", createElementsString(mailable.getTo(), ","));
-			}
-
-			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
-				builder.setParameter("cc", createElementsString(mailable.getCc(), ","));
-			}
-
-			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
-				builder.setParameter("bcc", createElementsString(mailable.getBcc(), ","));
-			}
-
-			String subject = "";
-			if (mailable.getSubject() != null) {
-				subject = mailable.getSubject();
-			}
-			builder.setParameter("su", subject);
-
-			String body = "";
-			if (mailable.getText() != null) {
-				body = mailable.getText();
-			}
-			builder.setParameter("body", body);
-
-			return builder.build();
-
-		} catch (Exception e) {
-			throw new ShareException("Could not create gmail compose URI", e);
-		}
-
-	}
-
-	public static URI createOutlookLiveComposeUri(Mailable mailable) throws ShareException {
-
-		try {
-
-			URIBuilder builder = new URIBuilder();
-			builder.setScheme("https");
-			builder.setHost("outlook.live.com");
-			builder.setPath("/mail/0/deeplink/compose");
-
-			String subject = "";
-			if (mailable.getSubject() != null) {
-				subject = mailable.getSubject();
-			}
-			builder.setParameter("subject", subject);
-
-			String body = "";
-			if (mailable.getText() != null) {
-				body = mailable.getText();
-			}
-			builder.setParameter("body", body);
-
-			if (mailable.getTo() != null && mailable.getTo().size() > 0) {
-				builder.setParameter("to", createElementsString(mailable.getTo(), ","));
-			}
-
-			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
-				builder.setParameter("cc", createElementsString(mailable.getCc(), ","));
-			}
-
-			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
-				builder.setParameter("bcc", createElementsString(mailable.getBcc(), ","));
-			}
-
-			return builder.build();
-
-		} catch (Exception e) {
-			throw new ShareException("Could not create outlook live compose URI", e);
-		}
 
 	}
 
