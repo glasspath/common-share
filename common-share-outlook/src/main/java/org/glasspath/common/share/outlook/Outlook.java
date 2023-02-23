@@ -62,7 +62,7 @@ public class Outlook extends COMLateBindingObject {
 		}
 	}
 
-	public class Application extends COMLateBindingObject {
+	public static class Application extends COMLateBindingObject {
 
 		public Application(IDispatch iDispatch) throws COMException {
 			super(iDispatch);
@@ -82,7 +82,7 @@ public class Outlook extends COMLateBindingObject {
 
 	}
 
-	public class MailItem extends COMLateBindingObject {
+	public static class MailItem extends COMLateBindingObject {
 
 		private Attachments attachments = null;
 		private Recipients recipients = null;
@@ -242,7 +242,7 @@ public class Outlook extends COMLateBindingObject {
 
 	}
 
-	public class Attachments extends COMLateBindingObject {
+	public static class Attachments extends COMLateBindingObject {
 
 		public Attachments(IDispatch iDispatch) throws COMException {
 			super(iDispatch);
@@ -279,7 +279,7 @@ public class Outlook extends COMLateBindingObject {
 
 	}
 
-	public class Attachment extends COMLateBindingObject {
+	public static class Attachment extends COMLateBindingObject {
 
 		public Attachment(IDispatch iDispatch) throws COMException {
 			super(iDispatch);
@@ -296,7 +296,7 @@ public class Outlook extends COMLateBindingObject {
 
 	}
 
-	public class PropertyAccessor extends COMLateBindingObject {
+	public static class PropertyAccessor extends COMLateBindingObject {
 
 		public PropertyAccessor(IDispatch iDispatch) throws COMException {
 			super(iDispatch);
@@ -310,7 +310,7 @@ public class Outlook extends COMLateBindingObject {
 
 	}
 
-	public class Recipients extends COMLateBindingObject {
+	public static class Recipients extends COMLateBindingObject {
 
 		public Recipients(IDispatch iDispatch) throws COMException {
 			super(iDispatch);
@@ -330,7 +330,7 @@ public class Outlook extends COMLateBindingObject {
 
 	}
 
-	public class Recipient extends COMLateBindingObject {
+	public static class Recipient extends COMLateBindingObject {
 
 		public Recipient(IDispatch iDispatch) throws COMException {
 			super(iDispatch);
@@ -355,7 +355,7 @@ public class Outlook extends COMLateBindingObject {
 
 	}
 
-	public class AddressEntry extends COMLateBindingObject {
+	public static class AddressEntry extends COMLateBindingObject {
 
 		public AddressEntry(IDispatch iDispatch) throws COMException {
 			super(iDispatch);
