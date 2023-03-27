@@ -167,7 +167,7 @@ public class MapiShareUtils {
 
 						int i = 0;
 
-						for (Entry<String, String> entry : mailable.getImages().entrySet()) {
+						for (Entry<String, String> entry : attachments.entrySet()) {
 
 							files[i].lpszPathName = new WString(entry.getKey());
 							files[i].lpszFileName = new WString(entry.getValue());
