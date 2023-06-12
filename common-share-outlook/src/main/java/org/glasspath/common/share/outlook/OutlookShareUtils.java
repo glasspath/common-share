@@ -43,7 +43,7 @@ public class OutlookShareUtils {
 
 	}
 
-	public static void createEmail(Mailable mailable) throws ShareException {
+	public static void createOutlookClassicEmail(Mailable mailable) throws ShareException {
 
 		boolean inited = false;
 
@@ -114,15 +114,15 @@ public class OutlookShareUtils {
 					mailItem.Display();
 
 				} else {
-					throw new ShareException("Could not create Outlook (COM) email because mailItem is null");
+					throw new ShareException("Could not create Outlook Classic (COM) email because mailItem is null");
 				}
 
 			} else {
-				throw new ShareException("Could not create Outlook (COM) email because app is null");
+				throw new ShareException("Could not create Outlook Classic (COM) email because app is null");
 			}
 
 		} catch (Exception e) {
-			throw new ShareException("Could not create Outlook (COM) email", e);
+			throw new ShareException("Could not create Outlook Classic (COM) email", e);
 		} finally {
 			if (inited) {
 				Ole32.INSTANCE.CoUninitialize();
@@ -131,7 +131,7 @@ public class OutlookShareUtils {
 
 	}
 
-	public static String getExecutablePath() {
+	public static String getOutlookClassicExecutablePath() {
 
 		// TODO: This is a bit of a hack..
 
@@ -180,11 +180,11 @@ public class OutlookShareUtils {
 
 	}
 
-	public static void createCommandLineEmail(Mailable mailable) throws ShareException {
-		createCommandLineEmail(getExecutablePath(), mailable);
+	public static void createOutlookClassicCommandLineEmail(Mailable mailable) throws ShareException {
+		createOutlookClassicCommandLineEmail(getOutlookClassicExecutablePath(), mailable);
 	}
 
-	public static void createCommandLineEmail(String executablePath, Mailable mailable) throws ShareException {
+	public static void createOutlookClassicCommandLineEmail(String executablePath, Mailable mailable) throws ShareException {
 
 		if (executablePath != null && executablePath.length() > 0) {
 
@@ -234,11 +234,11 @@ public class OutlookShareUtils {
 				// process.waitFor();
 
 			} catch (Exception e) {
-				throw new ShareException("Could not create Outlook (command line) email", e);
+				throw new ShareException("Could not create Outlook Classic (command line) email", e);
 			}
 
 		} else {
-			throw new ShareException("Could not create Outlook (command line) email because executablePath is not valid");
+			throw new ShareException("Could not create Outlook Classic (command line) email because executablePath is not valid");
 		}
 
 	}

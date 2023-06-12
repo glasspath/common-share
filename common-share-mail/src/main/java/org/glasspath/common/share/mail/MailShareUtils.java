@@ -539,4 +539,45 @@ public class MailShareUtils {
 
 	}
 
+	public static URI createOutlookComposeUri(Mailable mailable) throws ShareException {
+
+		try {
+
+			URIBuilder builder = new URIBuilder();
+			builder.setScheme("ms-outlook");
+			builder.setHost("emails");
+			builder.setPath("/new");
+
+			String subject = "";
+			if (mailable.getSubject() != null) {
+				subject = mailable.getSubject();
+			}
+			builder.setParameter("subject", subject);
+
+			String body = "";
+			if (mailable.getText() != null) {
+				body = mailable.getText();
+			}
+			builder.setParameter("body", body);
+
+			if (mailable.getTo() != null && mailable.getTo().size() > 0) {
+				builder.setParameter("to", MailUtils.createElementsString(mailable.getTo(), ","));
+			}
+
+			if (mailable.getCc() != null && mailable.getCc().size() > 0) {
+				builder.setParameter("cc", MailUtils.createElementsString(mailable.getCc(), ","));
+			}
+
+			if (mailable.getBcc() != null && mailable.getBcc().size() > 0) {
+				builder.setParameter("bcc", MailUtils.createElementsString(mailable.getBcc(), ","));
+			}
+
+			return builder.build();
+
+		} catch (Exception e) {
+			throw new ShareException("Could not create outlook compose URI", e);
+		}
+
+	}
+
 }
